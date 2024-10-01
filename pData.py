@@ -1,7 +1,15 @@
+import sys
+import os
+ # Load the required external libs
+sys.path.append("apps/python/pData/deps/stdlib64")
+sys.path.append("apps/python/pData/deps")
+os.environ["PATH"] = os.environ["PATH"] + ";."
+
 import ac
 from LapController import LapController
 import acsys
 import json
+import requests
 
 outfile = None
 updatetime=0
@@ -11,19 +19,13 @@ lap_data = None
 
 def acMain(ac_version):
     global track_length, lapController
-    ac.console("Starting the new app")
-    
-   
-    import urllib.request
+    ac.console("Starting the new app")   
 
-    url = "http://www.example.com/"
+    url = "https://api.openf1.org/v1/drivers?driver_number=1&session_key=9158"
 
-    # Make a GET request
-    with urllib.request.urlopen(url) as response:
-        status = response.getcode()
-        content = response.read().decode()
-
-    ac.log(status)
+    r = requests.get(url)
+    res = r.json()
+    ac.log(str(res))
 
     track = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
