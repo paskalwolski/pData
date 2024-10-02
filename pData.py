@@ -10,6 +10,7 @@ from LapController import LapController
 import acsys
 import json
 import requests
+from sim_info import info
 
 outfile = None
 updatetime=0
@@ -17,22 +18,20 @@ lap_number=0
 distance = None
 lap_data = None
 
+
 def acMain(ac_version):
     global track_length, lapController
     ac.console("Starting the new app")   
-
-    url = "https://api.openf1.org/v1/drivers?driver_number=1&session_key=9158"
-
-    r = requests.get(url)
-    res = r.json()
-    ac.log(str(res))
-
     track = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
-    session_type = ac.getTrackConfiguration(0)
+    track_config = ac.getTrackConfiguration(0)
+    if track_config and track_config != track: track = "{} {}".format(track, track_config)
     car_name = ac.getCarName(0)
+
+    session_type = info.graphics.session
+
     lapController = LapController(session_type, track, car_name)
-    ac.log(str(session_type +": "+track + " in " + car_name))
+    ac.log(str(str(session_type) +": "+track + " in " + car_name))
     appWindow = ac.newApp('pData')
     ac.setSize(appWindow, 200, 100)
     return "pData"
@@ -43,6 +42,12 @@ def acUpdate(deltaT):
     global track_length
     global lap_number, lap_data
     global lapController
+
+    current_s_id = info.graphics.session
+    if current_s_id != lapController.session_id: 
+        ac.log("Ending session {}".format(lapController.get_session()))
+        ac.log("Starting session {}".format(current_s_id))
+        lapController.start_session(current_s_id)
 
     # Take 4 points per meter - we store the first valid clamp dist and discard any new ones for that same clamp dist - even if the raw dist is different  
     track_distance = get_track_distance(track_length, ac.getCarState(0, acsys.CS.NormalizedSplinePosition))
@@ -57,6 +62,8 @@ def acUpdate(deltaT):
     if lap != lap_number:
         ac.log('started new lap')
         lap_number = lap
+        last_time = ac.getCarState(0, acsys.CS.LastLap)
+        lapController.end_lap(last_time)
         # More to come here - end the previous dataset, start a new one
         # What happens at end of session? 
     valid = ac.getCarState(0, acsys.CS.LapInvalidated)
@@ -80,13 +87,14 @@ def acUpdate(deltaT):
 
     info_str = json.dumps(update_info)
     ac.console(info_str)
+    lapController.add_lap_data(update_info)
     if not valid: lapController.invalidate_lap()
     if pit: lapController.set_pit_lap()
 
 def acShutdown():
     global lapController
     ac.console('Ending the session')
-    lapController.end_session()
+    lapController.end_event()
     pass
 
 def get_track_distance(track_length, track_position):
