@@ -1,6 +1,7 @@
 from datetime import datetime
 import os
 import json
+import ac
 
 session_LUT = (
     (0, "PRACTICE"),
@@ -34,8 +35,8 @@ class LapController:
 
     def end_session(self):
         s = self.export_session()
-        # if s['lapCount'] == 0:
-        #     return
+        if len(s['lap_data']) == 0:
+            return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}laps.json".format(self.track, self.car, self.get_session(), self.lap_count)
         b = json.dumps(s)
@@ -61,12 +62,13 @@ class LapController:
         self.pit_lap = False
     
     def end_lap(self, lap_time):
-        self.laps.append({
+        lap_data = {
             'lap_data': self.lap_data_points,
             'lap_time': lap_time,
             'valid': self.lap_valid,
             'pit_lap': self.pit_lap,
-            })
+            }
+        self.laps.append(lap_data)
         self.start_lap()
        
 
