@@ -18,6 +18,7 @@ lap_number=0
 distance = None
 lap_data = None
 
+dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
 
 def acMain(ac_version):
     global track_length, lapController
@@ -49,7 +50,6 @@ def acUpdate(deltaT):
         ac.log("Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
 
-    # Take 4 points per meter - we store the first valid clamp dist and discard any new ones for that same clamp dist - even if the raw dist is different  
     track_distance = get_track_distance(track_length, ac.getCarState(0, acsys.CS.NormalizedSplinePosition))
     if not distance: distance = track_distance
     if distance == track_distance:
@@ -98,6 +98,11 @@ def acShutdown():
     pass
 
 def get_track_distance(track_length, track_position):
+    # We want to check if we are 'close enough' to the meter point for the data to be 
+    # reliable. If it's close enough use it, if not - find the next one ! We
+    # assume that there WILL be one close enough... 
+    # if abs(track_position - int(track_position) > dist_threshold):
+    #     pass
     return clamp_track_distance(track_length * track_position)
 
 def clamp_track_distance(dist: float):
