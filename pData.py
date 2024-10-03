@@ -10,12 +10,13 @@ from LapController import LapController
 import acsys
 import json
 import requests
+import math
 from sim_info import info
 
 outfile = None
 updatetime=0
 lap_number=0
-distance = None
+last_meter = None
 lap_data = None
 
 dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
@@ -39,7 +40,7 @@ def acMain(ac_version):
 
 
 def acUpdate(deltaT):
-    global distance
+    global last_meter
     global track_length
     global lap_number, lap_data
     global lapController
@@ -49,14 +50,20 @@ def acUpdate(deltaT):
         ac.log("Ending session {}".format(lapController.get_session()))
         ac.log("Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
-
-    track_distance = get_track_distance(track_length, ac.getCarState(0, acsys.CS.NormalizedSplinePosition))
-    if not distance: distance = track_distance
-    if distance == track_distance:
-        # Discard data for the same distance point
+    track_distance = ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length
+    track_meter = math.floor(track_distance)
+    # ac.console("{} meter {}".format(track_distance, track_meter))
+    if last_meter == track_meter:
+        ac.console("Dupe Discard")
+        # We've already measured this meter - discard it
         return
-
-    distance = track_distance
+    if track_distance <= (track_meter + 0.5): 
+        # This point is too early in the meter - discard it
+        ac.console("Early Discard: {} < {} + 0.5".format(track_distance, track_meter))
+        return
+    # We have a good distance! Track it.
+    last_meter = track_meter
+    ac.log("Using {} for meter {}".format(track_distance, track_meter))
 
     lap = ac.getCarState(0, acsys.CS.LapCount)
     if lap != lap_number:
@@ -96,18 +103,6 @@ def acShutdown():
     ac.console('Ending the session')
     lapController.end_event()
     pass
-
-def get_track_distance(track_length, track_position):
-    # We want to check if we are 'close enough' to the meter point for the data to be 
-    # reliable. If it's close enough use it, if not - find the next one ! We
-    # assume that there WILL be one close enough... 
-    # if abs(track_position - int(track_position) > dist_threshold):
-    #     pass
-    return clamp_track_distance(track_length * track_position)
-
-def clamp_track_distance(dist: float):
-    """Take a value and clamp it to a quarter meter"""
-    return round(dist * 4) / 4
 
 
 """
