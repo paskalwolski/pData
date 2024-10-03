@@ -18,7 +18,7 @@ class LapController:
         self.laps = []
         self.lap_count = 0
 
-        self.lap_valid = True 
+        self.lap_invalid = False 
         self.pit_lap = False
         self.lap_data_points = []
 
@@ -55,30 +55,43 @@ class LapController:
         self.end_session()
         pass
 
-    def start_lap(self):
-        self.lap_count += 1
+    def start_lap(self, lap_number):
+        self.lap_count = lap_number
         self.lap_data_points = []
-        self.lap_valid = True
+        self.lap_invalid = False
         self.pit_lap = False
     
-    def end_lap(self, lap_time):
+    def end_lap(self, lap_number, lap_time):
         lap_data = {
+            'lap_number': self.lap_count,
             'lap_data': self.lap_data_points,
             'lap_time': lap_time,
-            'valid': self.lap_valid,
+            'valid': self.lap_invalid,
             'pit_lap': self.pit_lap,
             }
-        self.laps.append(lap_data)
-        self.start_lap()
+        if  self.session_id == 2: 
+            # Race rules - keep all the laps
+            self.laps.append(lap_data)
+        elif self.session_id == 1: 
+            # Quali rules - keep invalid, discard pit
+            if not self.pit_lap:
+                self.laps.append(lap_data)
+        else: # self.session_id == 0
+            # Practice Rules - only keep valid
+            if not self.pit_lap or not self.lap_invalid:
+                self.laps.append(lap_data)
+        self.start_lap(lap_number)
        
 
     def add_lap_data(self, data):
         self.lap_data_points.append(data)
 
     def invalidate_lap(self):
-        self.lap_valid = False
+        ac.log("Invalidated Lap {}".format(self.lap_count))
+        self.lap_invalid = True
 
     def set_pit_lap(self):
+        ac.log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
 
     

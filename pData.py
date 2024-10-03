@@ -63,17 +63,18 @@ def acUpdate(deltaT):
         return
     # We have a good distance! Track it.
     last_meter = track_meter
-    ac.log("Using {} for meter {}".format(track_distance, track_meter))
+    # ac.log("Using {} for meter {}".format(track_distance, track_meter))
 
     lap = ac.getCarState(0, acsys.CS.LapCount)
     if lap != lap_number:
         ac.log('started new lap')
         lap_number = lap
         last_time = ac.getCarState(0, acsys.CS.LastLap)
-        lapController.end_lap(last_time)
+        lapController.end_lap(lap, last_time)
         # More to come here - end the previous dataset, start a new one
         # What happens at end of session? 
-    valid = ac.getCarState(0, acsys.CS.LapInvalidated)
+    tyres_out = info.physics.numberOfTyresOut
+    invalid = True if tyres_out > 2 else False
     pit = ac.isCarInPitlane(0)
     speed = ac.getCarState(0, acsys.CS.SpeedKMH)
     gas = ac.getCarState(0, acsys.CS.Gas)
@@ -90,12 +91,15 @@ def acUpdate(deltaT):
         'gear': gear,
         'steer': steer,
         'rpm': rpm,
+        'pit': pit,
+        'invalid': invalid,
     }
 
     info_str = json.dumps(update_info)
     ac.console(info_str)
+    
     lapController.add_lap_data(update_info)
-    if not valid: lapController.invalidate_lap()
+    if invalid: lapController.invalidate_lap()
     if pit: lapController.set_pit_lap()
 
 def acShutdown():
