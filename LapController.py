@@ -22,7 +22,7 @@ class LapController:
         self.pit_lap = False
         self.lap_data_points = []
 
-    def export_session(self):
+    def get_export_data(self):
         data = {
             'time': self.time.strftime("%d-%m-%y"),
             'track': self.track, 
@@ -34,7 +34,7 @@ class LapController:
         return data
 
     def end_session(self):
-        s = self.export_session()
+        s = self.get_export_data()
         if len(s['lap_data']) == 0:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
@@ -87,11 +87,11 @@ class LapController:
         self.lap_data_points.append(data)
 
     def invalidate_lap(self):
-        ac.log("Invalidated Lap {}".format(self.lap_count))
+        # ac.log("Invalidated Lap {}".format(self.lap_count))
         self.lap_invalid = True
 
     def set_pit_lap(self):
-        ac.log("Pit Lap {}".format(self.lap_count))
+        # ac.log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
 
     
