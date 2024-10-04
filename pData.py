@@ -21,6 +21,23 @@ lap_data = None
 
 dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
 
+def init_app(app_label):
+    app = ac.newApp(app_label)
+    ac.setTitle(app, 'pData Logger')
+    ac.setSize(app, 200, 100)
+
+    ac.addCheckBox(app, "check-log")
+    ac.addLabel("check-log", "Export to Log Files")
+    ac.setPosition("check-log", 5, 5)
+
+    ac.addTextInput(app, "input-user")
+    ac.addLabel("input-user", "Username")
+    ac.setPosition("input-user", 5, 55)
+    ac.addTextInput(app, "input-pass")
+    ac.addLabel("input-pass", "Password")
+    ac.setPosition("input-pass", 5, 105)
+
+
 def acMain(ac_version):
     global track_length, lapController
     ac.console("Starting the new app")   
@@ -34,8 +51,7 @@ def acMain(ac_version):
 
     lapController = LapController(session_type, track, car_name)
     ac.log(str(str(session_type) +": "+track + " in " + car_name))
-    appWindow = ac.newApp('pData')
-    ac.setSize(appWindow, 200, 100)
+    app = init_app('pData')
     return "pData"
 
 
