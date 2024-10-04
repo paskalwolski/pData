@@ -50,7 +50,7 @@ def acUpdate(deltaT):
         ac.log("Ending session {}".format(lapController.get_session()))
         ac.log("Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
-    track_distance = ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length
+    track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
     # ac.console("{} meter {}".format(track_distance, track_meter))
     if last_meter == track_meter:
@@ -67,7 +67,6 @@ def acUpdate(deltaT):
 
     lap = ac.getCarState(0, acsys.CS.LapCount)
     if lap != lap_number:
-        ac.log('started new lap')
         lap_number = lap
         last_time = ac.getCarState(0, acsys.CS.LastLap)
         lapController.end_lap(lap, last_time)
@@ -76,12 +75,16 @@ def acUpdate(deltaT):
     tyres_out = info.physics.numberOfTyresOut
     invalid = True if tyres_out > 2 else False
     pit = ac.isCarInPitlane(0)
-    speed = ac.getCarState(0, acsys.CS.SpeedKMH)
-    gas = ac.getCarState(0, acsys.CS.Gas)
-    brake = ac.getCarState(0, acsys.CS.Brake)
+    speed = round(ac.getCarState(0, acsys.CS.SpeedKMH), 2)
+    gas = round(ac.getCarState(0, acsys.CS.Gas), 2)
+    brake = round(ac.getCarState(0, acsys.CS.Brake), 2)
     gear = ac.getCarState(0, acsys.CS.Gear)
-    steer = ac.getCarState(0, acsys.CS.Steer)
-    rpm = ac.getCarState(0, acsys.CS.RPM)
+    steer = round(ac.getCarState(0, acsys.CS.Steer), 2)
+    rpm = round(ac.getCarState(0, acsys.CS.RPM), 2)
+    raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
+    pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
+    heading = round(info.physics.heading, 3)
+
 
     update_info = {
         'distance': track_distance,
@@ -93,6 +96,8 @@ def acUpdate(deltaT):
         'rpm': rpm,
         'pit': pit,
         'invalid': invalid,
+        'pos': pos, 
+        'heading': heading,
     }
 
     info_str = json.dumps(update_info)

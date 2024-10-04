@@ -60,15 +60,17 @@ class LapController:
         self.lap_data_points = []
         self.lap_invalid = False
         self.pit_lap = False
+        # TODO: Add logic for catchign a start behind teh s/f line
     
     def end_lap(self, lap_number, lap_time):
         lap_data = {
             'lap_number': self.lap_count,
             'lap_data': self.lap_data_points,
             'lap_time': lap_time,
-            'valid': self.lap_invalid,
+            'invalid': self.lap_invalid,
             'pit_lap': self.pit_lap,
             }
+        ac.log("Lap {}: {} Pit {} Invalid {}".format(self.lap_count, lap_time, self.pit_lap, self.lap_invalid))
         if  self.session_id == 2: 
             # Race rules - keep all the laps
             self.laps.append(lap_data)
