@@ -12,7 +12,8 @@ session_LUT = (
 
 class LapController:
     def __init__(self, session_id, instance_track, instance_car, *args, **kwargs):
-        self.time = datetime.now()
+        self.event_time = datetime.now().strftime("%d%m%Y%H%M")
+        self.session_time = datetime.now().strftime("%d%m%Y_%H%M")
         self.track = instance_track
         self.session_id = session_id
         self.car = instance_car
@@ -25,7 +26,8 @@ class LapController:
 
     def get_export_data(self):
         data = {
-            "time": self.time.strftime("%d-%m-%y"),
+            "eventTime": self.event_time,
+            "time": self.session_time,
             "track": self.track,
             "car": self.car,
             "sessionType": self.get_session(),
@@ -39,8 +41,8 @@ class LapController:
         if len(s["lap_data"]) == 0:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
-        file_name = "{}-{}-{}-{}laps.json".format(
-            self.track, self.car, self.get_session(), self.lap_count
+        file_name = "{}-{}-{}-{}_laps-{}.json".format(
+            self.track, self.car, self.get_session(), self.lap_count, self.session_time
         )
         b = json.dumps(s)
         with open(os.path.join(log_dir, file_name), "w") as f:
@@ -48,6 +50,7 @@ class LapController:
 
     def start_session(self, type: int):
         self.end_session()
+        self.session_time = datetime.now().strftime("%d%m%Y_%H%M")
         self.session_id = type
         self.lap_count = 0
 
