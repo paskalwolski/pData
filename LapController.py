@@ -27,18 +27,18 @@ class LapController:
     def get_export_data(self):
         data = {
             "eventTime": self.event_time,
-            "time": self.session_time,
+            "sessionTime": self.session_time,
             "track": self.track,
             "car": self.car,
             "sessionType": self.get_session(),
             "lapCount": self.lap_count,
-            "lap_data": self.laps,
+            "laps": self.laps,
         }
         return data
 
     def end_session(self):
         s = self.get_export_data()
-        if len(s["lap_data"]) == 0:
+        if len(s["laps"]) == 0:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
@@ -77,8 +77,8 @@ class LapController:
             "pit_lap": self.pit_lap,
         }
         ac.log(
-            "Lap {}: {} Pit {} Invalid {}".format(
-                self.lap_count, lap_time, self.pit_lap, self.lap_invalid
+            "Session {} Lap {}: {} Pit {} Invalid {}".format(
+                self.session_id, self.lap_count, lap_time, self.pit_lap, self.lap_invalid
             )
         )
         if self.session_id == 2:
@@ -89,20 +89,23 @@ class LapController:
             if not self.pit_lap:
                 self.laps.append(lap_data)
             else:
+                ac.log('Discarding Quali Lap')
                 self.laps.append(
                     {"lap_number": lap_number, "discard": True, "pit_lap": self.pit_lap}
                 )
         else:  # self.session_id == 0
             # Practice Rules - only keep valid
-            if not self.pit_lap or not self.lap_invalid:
+            if not self.pit_lap and not self.lap_invalid:
+                ac.log('Storing Practice Lap: {} {}'.format(self.pit_lap, self.lap_invalid))
                 self.laps.append(lap_data)
             else:
+                ac.log('Discarding Practice Lap')
                 self.laps.append(
                     {
                         "lap_number": lap_number,
                         "discard": True,
                         "pit_lap": self.pit_lap,
-                        "invalid": self.invalid,
+                        "invalid": self.lap_invalid,
                     }
                 )
         self.start_lap(lap_number)
