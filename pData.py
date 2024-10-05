@@ -19,8 +19,6 @@ lap_number=0
 last_meter = None
 lap_data = None
 
-dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
-
 def acMain(ac_version):
     global track_length, lapController
     ac.console("Starting the new app")   
