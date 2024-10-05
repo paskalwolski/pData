@@ -83,6 +83,7 @@ def acUpdate(deltaT):
     rpm = round(ac.getCarState(0, acsys.CS.RPM), 2)
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
+    # pos = [round(raw_pos,1) for raw_pos in pos]
     heading = round(info.physics.heading, 3)
 
 
