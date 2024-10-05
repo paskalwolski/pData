@@ -6,7 +6,7 @@ sys.path.append("apps/python/pData/deps")
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 import ac
-from LapController import LapController
+from LapController import LapController, SESSION_LUT
 import acsys
 import json
 import requests
@@ -48,9 +48,8 @@ def acMain(ac_version):
     car_name = ac.getCarName(0)
 
     session_type = info.graphics.session
-
     lapController = LapController(session_type, track, car_name)
-    ac.log(str(str(session_type) +": "+track + " in " + car_name))
+    ac.log(str(SESSION_LUT[session_type][1] +": "+track + " in " + car_name))
     app = init_app('pData')
     return "pData"
 
@@ -68,7 +67,6 @@ def acUpdate(deltaT):
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
-    # ac.console("{} meter {}".format(track_distance, track_meter))
     if last_meter == track_meter:
         # ac.console("Dupe Discard")
         # We've already measured this meter - discard it
@@ -92,6 +90,7 @@ def acUpdate(deltaT):
     invalid = True if tyres_out > 2 else False
     pit = ac.isCarInPitlane(0)
     speed = round(ac.getCarState(0, acsys.CS.SpeedKMH), 2)
+    lap_time = ac.getCarState(0, acsys.CS.LapTime)
     gas = round(ac.getCarState(0, acsys.CS.Gas), 2)
     brake = round(ac.getCarState(0, acsys.CS.Brake), 2)
     gear = ac.getCarState(0, acsys.CS.Gear)
@@ -99,11 +98,13 @@ def acUpdate(deltaT):
     rpm = round(ac.getCarState(0, acsys.CS.RPM), 2)
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
+    # pos = [round(raw_pos,1) for raw_pos in pos]
     heading = round(info.physics.heading, 3)
 
 
     update_info = {
         'distance': track_distance,
+        'lapTime': lap_time,
         'speed': speed,
         'gas': gas, 
         'brake': brake,
@@ -128,24 +129,3 @@ def acShutdown():
     ac.console('Ending the session')
     lapController.end_event()
     pass
-
-
-"""
-{
-    track_name, 
-    session_start_time, 
-    laps: [{
-        position: [(x, y, z)]
-        track_position,
-        lap_number, 
-        isValid,
-        speed, 
-        brake, 
-        gas, 
-        steering,
-        gear,
-        rpm,
-        tc,
-    }, ]
-}
-"""
