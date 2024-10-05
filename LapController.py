@@ -3,7 +3,7 @@ import os
 import json
 import ac
 
-session_LUT = (
+SESSION_LUT = (
     (0, "PRACTICE"),
     (1, "QUALIFY"),
     (2, "RACE"),
@@ -55,7 +55,7 @@ class LapController:
         self.lap_count = 0
 
     def get_session(self):
-        return session_LUT[self.session_id][1]
+        return SESSION_LUT[self.session_id][1]
 
     def end_event(self):
         self.end_session()
