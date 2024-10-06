@@ -80,10 +80,9 @@ def acUpdate(deltaT):
     # ac.log("Using {} for meter {}".format(track_distance, track_meter))
 
     lap = ac.getCarState(0, acsys.CS.LapCount)
-    if lap != lap_number:
-        lap_number = lap
+    if lap != lapController.current_lap:
         last_time = ac.getCarState(0, acsys.CS.LastLap)
-        lapController.end_lap(lap, last_time)
+        lapController.end_lap(last_time)
         # More to come here - end the previous dataset, start a new one
         # What happens at end of session? 
     tyres_out = info.physics.numberOfTyresOut
