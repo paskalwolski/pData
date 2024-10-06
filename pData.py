@@ -111,8 +111,8 @@ def acUpdate(deltaT):
         'gear': gear,
         'steer': steer,
         'rpm': rpm,
-        'pit': pit,
-        'invalid': invalid,
+        # 'pit': pit,
+        # 'invalid': invalid,
         'pos': pos, 
         'heading': heading,
     }
