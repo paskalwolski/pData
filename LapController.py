@@ -12,8 +12,8 @@ SESSION_LUT = (
 
 class LapController:
     def __init__(self, session_id, instance_track, instance_car, *args, **kwargs):
-        self.event_time = datetime.now().strftime("%d%m%Y%H%M")
-        self.session_time = datetime.now().strftime("%d%m%Y_%H%M")
+        self.event_time = datetime.now()
+        self.session_time = datetime.now()
         self.track = instance_track
         self.session_id = session_id
         self.car = instance_car
@@ -26,8 +26,8 @@ class LapController:
 
     def get_export_data(self):
         data = {
-            "eventTime": self.event_time,
-            "sessionTime": self.session_time,
+            "eventTime": self.event_time.isoformat(),
+            "sessionTime": self.session_time.isoformat(),
             "track": self.track,
             "car": self.car,
             "sessionType": self.get_session(),
@@ -43,7 +43,7 @@ class LapController:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
-            self.track, self.car, self.get_session(), self.current_lap, self.session_time
+            self.track, self.car, self.get_session(), self.current_lap, self.session_time.strftime("%d%m%Y%H%M")
         )
         b = json.dumps(s)
         with open(os.path.join(log_dir, file_name), "w") as f:
@@ -52,7 +52,7 @@ class LapController:
     def start_session(self, s_id: int):
         # Close the last session
         self.end_session()
-        self.session_time = datetime.now().strftime("%d%m%Y_%H%M")
+        self.session_time = datetime.now()
         self.session_id = s_id
         
         # Reset the lap data and tracker
