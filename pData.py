@@ -48,8 +48,8 @@ def acMain(ac_version):
     car_name = ac.getCarName(0)
 
     session_type = info.graphics.session
-    lapController = LapController(session_type, track, car_name)
-    ac.log(str(SESSION_LUT[session_type][1] +": "+track + " in " + car_name))
+    lapController = LapController(session_type, track, math.round(track_length), car_name)
+    ac.log(str(SESSION_LUT[session_type][1] +": "+track + "({}m) in " + car_name).format(track_length))
     app = init_app('pData')
     return "pData"
 
@@ -67,6 +67,7 @@ def acUpdate(deltaT):
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
+    
     if last_meter == track_meter:
         # ac.console("Dupe Discard")
         # We've already measured this meter - discard it
@@ -76,15 +77,15 @@ def acUpdate(deltaT):
         # ac.console("Early Discard: {} < {} + 0.5".format(track_distance, track_meter))
         return
     # We have a good distance! Track it.
+
     last_meter = track_meter
-    # ac.log("Using {} for meter {}".format(track_distance, track_meter))
 
     lap = ac.getCarState(0, acsys.CS.LapCount)
+    # ac.console("Meter {} Lap {}".format(track_distance, lap))
     if lap != lapController.current_lap:
         last_time = ac.getCarState(0, acsys.CS.LastLap)
-        lapController.end_lap(last_time)
-        # More to come here - end the previous dataset, start a new one
-        # What happens at end of session? 
+        lapController.start_lap(lap, last_lap_time=last_time)
+
     tyres_out = info.physics.numberOfTyresOut
     invalid = True if tyres_out > 2 else False
     pit = ac.isCarInPitlane(0)
@@ -98,11 +99,9 @@ def acUpdate(deltaT):
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
     # pos = [round(raw_pos,1) for raw_pos in pos]
-    heading = round(info.physics.heading, 3)
 
 
     update_info = {
-        'distance': track_distance,
         'lapTime': lap_time,
         'speed': speed,
         'gas': gas, 
@@ -110,16 +109,16 @@ def acUpdate(deltaT):
         'gear': gear,
         'steer': steer,
         'rpm': rpm,
+        'pos': pos, 
+        # 'distance': track_distance, # Remove track distance, stick to indices for measurement 
         # 'pit': pit,
         # 'invalid': invalid,
-        'pos': pos, 
-        'heading': heading,
     }
 
-    info_str = json.dumps(update_info)
-    ac.console(info_str)
+    # info_str = json.dumps(update_info)
+    # ac.console(info_str)
     
-    lapController.add_lap_data(update_info)
+    lapController.add_lap_data(track_meter-1, update_info) # Shift the meter by 1 for track index - as tracks seem to start at 1m? 
     if invalid: lapController.invalidate_lap()
     if pit: lapController.set_pit_lap()
 

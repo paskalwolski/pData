@@ -11,10 +11,11 @@ SESSION_LUT = (
 
 
 class LapController:
-    def __init__(self, session_id, instance_track, instance_car, *args, **kwargs):
+    def __init__(self, session_id, instance_track, track_length, instance_car, *args, **kwargs):
         self.event_time = datetime.now()
         self.session_time = datetime.now()
         self.track = instance_track
+        self.track_length = track_length
         self.session_id = session_id
         self.car = instance_car
         self.laps = []
@@ -22,7 +23,7 @@ class LapController:
         self.current_lap = 0
         self.lap_invalid = False
         self.pit_lap = False
-        self.lap_data_points = []
+        self.lap_data_points = [None for _ in range(track_length)]
 
     def get_export_data(self):
         data = {
@@ -66,9 +67,10 @@ class LapController:
         self.end_session()
         pass
 
-    def start_lap(self, lap_number):
+    def start_lap(self, lap_number, last_lap_time=None):
+        if last_lap_time: self.end_lap(last_lap_time)
         self.current_lap = lap_number
-        self.lap_data_points = []
+        self.lap_data_points = [None for _ in range(self.track_length)]
         self.lap_invalid = False
         self.pit_lap = False
         # TODO: Add logic for catchign a start behind teh s/f line
@@ -113,10 +115,10 @@ class LapController:
                         "invalid": self.lap_invalid,
                     }
                 )
-        self.start_lap(self.current_lap + 1)
+        # self.start_lap(self.current_lap + 1)
 
-    def add_lap_data(self, data):
-        self.lap_data_points.append(data)
+    def add_lap_data(self, index, data):
+        self.lap_data_points[index] = data 
 
     def invalidate_lap(self):
         # ac.log("Invalidated Lap {}".format(self.lap_count))
