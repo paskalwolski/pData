@@ -94,41 +94,14 @@ class LapController:
             self.laps.append({
                 "lap_number": self.current_lap,
                 "discard": True,
-                "invalid": True,
+                "invalid": self.lap_invalid,
+                "pit": self.pit_lap,
             })
             return
         else:
             self.laps.append(lap_data)     
-        # if self.session_id == 2:
-        #     # Race rules - keep all the laps
-        #     self.laps.append(lap_data)
-        # elif self.session_id == 1:
-        #     # Quali rules - keep invalid, discard pit
-        #     if not self.pit_lap:
-        #         self.laps.append(lap_data)
-        #     else:
-        #         ac.log('Discarding Quali Lap')
-        #         self.laps.append(
-        #             {"lap_number": self.current_lap, "discard": True, "pit_lap": self.pit_lap}
-        #         )
-        #         return
-        # else:  # self.session_id == 0
-        #     # Practice Rules - only keep valid
-        #     if not self.pit_lap and not self.lap_invalid:
-        #         ac.log('Storing Practice Lap: {} {}'.format(self.pit_lap, self.lap_invalid))
-        #         self.laps.append(lap_data)
-        #     else:
-        #         ac.log('Discarding Practice Lap')
-        #         self.laps.append(
-        #             {
-        #                 "lap_number": self.current_lap,
-        #                 "discard": True,
-        #                 "pit_lap": self.pit_lap,
-        #                 "invalid": self.lap_invalid,
-        #             }
-        #         )
+            self.check_fastest_lap(lap_time)
         # Discarded Laps have returned - check if the remaining lap is fastestLap
-        self.check_fastest_lap(lap_time)
         # self.start_lap(self.current_lap + 1)
 
     def set_fastest_lap(self, lap_number, lap_time):
