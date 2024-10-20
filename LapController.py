@@ -18,6 +18,7 @@ class LapController:
         self.track_length = track_length
         self.session_id = session_id
         self.car = instance_car
+        self.fastest_lap = None
         self.laps = []
 
         self.current_lap = 0
@@ -33,6 +34,7 @@ class LapController:
             "car": self.car,
             "sessionType": self.get_session(),
             "lapCount": self.current_lap,
+            "fastestLap": self.fastest_lap,
             "laps": self.laps,
         }
         return data
@@ -100,6 +102,7 @@ class LapController:
                 self.laps.append(
                     {"lap_number": self.current_lap, "discard": True, "pit_lap": self.pit_lap}
                 )
+                return
         else:  # self.session_id == 0
             # Practice Rules - only keep valid
             if not self.pit_lap and not self.lap_invalid:
@@ -115,7 +118,22 @@ class LapController:
                         "invalid": self.lap_invalid,
                     }
                 )
+                return
+        # Discarded Laps have returned - check if the remaining lap is fastestLap
+        self.check_fastest_lap(lap_time)
         # self.start_lap(self.current_lap + 1)
+
+    def set_fastest_lap(self, lap_number, lap_time):
+        self.fastest_lap = lap_number
+        self.fastest_lap_time = lap_time
+
+    def check_fastest_lap(self, lap_time):
+        if not self.fastest_lap:
+            self.set_fastest_lap(self.current_lap, lap_time)
+            return
+        # Fastest lap already exists - check to see if this one was faster
+        if lap_time < self.fastest_lap_time:
+            self.set_fastest_lap(self.current_lap, lap_time) 
 
     def add_lap_data(self, index, data):
         self.lap_data_points[index] = data 
