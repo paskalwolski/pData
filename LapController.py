@@ -90,7 +90,7 @@ class LapController:
                 self.session_id, self.current_lap, lap_time, self.pit_lap, self.lap_invalid
             )
         )
-        if self.lap_invalid:
+        if self.lap_invalid or self.pit_lap:
             self.laps.append({
                 "lap_number": self.current_lap,
                 "discard": True,
