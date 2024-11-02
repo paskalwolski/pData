@@ -2,6 +2,7 @@ from datetime import datetime
 import os
 import json
 import ac
+import requests
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -9,9 +10,20 @@ SESSION_LUT = (
     (2, "RACE"),
 )
 
+DATA_SEND_URL = "https://tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
+DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
 
 class LapController:
-    def __init__(self, session_id, instance_track, track_length, instance_car, *args, **kwargs):
+    def __init__(
+        self,
+        session_id,
+        instance_track,
+        track_length,
+        instance_car,
+        driver,
+        *args,
+        **kwargs
+    ):
         self.event_time = datetime.now()
         self.session_time = datetime.now()
         self.track = instance_track
@@ -20,6 +32,7 @@ class LapController:
         self.car = instance_car
         self.fastest_lap = None
         self.laps = []
+        self.driver = driver
 
         self.current_lap = 0
         self.lap_invalid = False
@@ -29,12 +42,14 @@ class LapController:
     def get_export_data(self):
         data = {
             "eventTime": self.event_time.isoformat(),
+            "driver": self.driver,
             "sessionTime": self.session_time.isoformat(),
             "track": self.track,
             "car": self.car,
             "sessionType": self.get_session(),
             "lapCount": self.current_lap,
             "fastestLap": self.fastest_lap,
+            "fastestLapTime": self.fastest_lap_time,
             "laps": self.laps,
         }
         return data
@@ -46,18 +61,29 @@ class LapController:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
-            self.track, self.car, self.get_session(), self.current_lap, self.session_time.strftime("%d%m%Y%H%M")
+            self.track,
+            self.car,
+            self.get_session(),
+            self.current_lap,
+            self.session_time.strftime("%d%m%Y%H%M"),
         )
         b = json.dumps(s)
         with open(os.path.join(log_dir, file_name), "w") as f:
             f.writelines(b)
+        self.send_session_data(s)
+
+    def send_session_data(self, s):
+        # Send the export data to the 
+        res = requests.post(DATA_SEND_URL, s)
+        ac.log(res.status_code)
+        ac.log(res.text)
 
     def start_session(self, s_id: int):
         # Close the last session
         self.end_session()
         self.session_time = datetime.now()
         self.session_id = s_id
-        
+
         # Reset the lap data and tracker
         self.laps = []
         self.start_lap(0)
@@ -70,7 +96,8 @@ class LapController:
         pass
 
     def start_lap(self, lap_number, last_lap_time=None):
-        if last_lap_time: self.end_lap(last_lap_time)
+        if last_lap_time:
+            self.end_lap(last_lap_time)
         self.current_lap = lap_number
         self.lap_data_points = [None for _ in range(self.track_length)]
         self.lap_invalid = False
@@ -87,30 +114,36 @@ class LapController:
         }
         ac.log(
             "Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
-                self.session_id, self.current_lap, lap_time, self.pit_lap, self.lap_invalid
+                self.session_id,
+                self.current_lap,
+                lap_time,
+                self.pit_lap,
+                self.lap_invalid,
             )
         )
         if self.session_id == 2:
             # Race - we want to keep pit laps and discard invalids
             if self.lap_invalid:
-                self.laps.append({
-                    "lap_number": self.current_lap,
-                    "discard": True,
-                    "invalid": self.lap_invalid,
-                    "pit_lap": self.pit_lap,
-                    "lap_time": lap_time,
-                })
+                self.laps.append(
+                    {
+                        "lap_number": self.current_lap,
+                        "discard": True,
+                        "invalid": self.lap_invalid,
+                        "pit_lap": self.pit_lap,
+                        "lap_time": lap_time,
+                    }
+                )
                 return
         else:
             if self.lap_invalid or self.pit_lap:
                 # Do nothing with useless laps
                 return
-        # Only valid laps here    
-        self.laps.append(lap_data)     
+        # Only valid laps here
+        self.laps.append(lap_data)
         self.check_fastest_lap(lap_time)
-        
+
     def set_fastest_lap(self, lap_number, lap_time):
-        ac.log("Setting fastest lap {}: {}".format(lap_number, lap_time) )
+        ac.log("Setting fastest lap {}: {}".format(lap_number, lap_time))
         self.fastest_lap = lap_number
         self.fastest_lap_time = lap_time
 
@@ -120,10 +153,10 @@ class LapController:
             return
         # Fastest lap already exists - check to see if this one was faster
         if lap_time < self.fastest_lap_time:
-            self.set_fastest_lap(self.current_lap, lap_time) 
+            self.set_fastest_lap(self.current_lap, lap_time)
 
     def add_lap_data(self, index, data):
-        self.lap_data_points[index] = data 
+        self.lap_data_points[index] = data
 
     def invalidate_lap(self):
         # ac.log("Invalidated Lap {}".format(self.lap_count))
