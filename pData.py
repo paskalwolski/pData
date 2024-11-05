@@ -9,8 +9,6 @@ os.environ["PATH"] = os.environ["PATH"] + ";."
 import ac
 from LapController import LapController, SESSION_LUT
 import acsys
-import json
-import requests
 import math
 from sim_info import info
 
@@ -22,22 +20,33 @@ lap_data = None
 
 dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
 
+def toggle_check(checkbox, value):
+    global lapController
+    if checkbox == "Export Log Files":
+        lapController.toggle_log(value)
+        return
+    if checkbox == "Upload to Cloud":
+        lapController.toggle_upload(value)
+
+
 def init_app(app_label):
     app = ac.newApp(app_label)
     ac.setTitle(app, 'pData Logger')
-    ac.setSize(app, 200, 100)
+    ac.setSize(app, 180, 100)
+    ac.setIconPosition(app, -100, -100)
 
-    ac.addCheckBox(app, "check-log")
-    ac.addLabel("check-log", "Export to Log Files")
-    ac.setPosition("check-log", 5, 5)
+    cb_log = ac.addCheckBox(app, "Export Log Files")
+    ac.setSize(cb_log, 18, 18)
+    ac.setPosition(cb_log, 10, 35)
+    ac.addOnCheckBoxChanged(cb_log, toggle_check)
+    ac.setValue(cb_log, 0)
 
-    ac.addTextInput(app, "input-user")
-    ac.addLabel("input-user", "Username")
-    ac.setPosition("input-user", 5, 55)
-    ac.addTextInput(app, "input-pass")
-    ac.addLabel("input-pass", "Password")
-    ac.setPosition("input-pass", 5, 105)
-
+    cb_upload = ac.addCheckBox(app, "Upload to Cloud")
+    ac.setSize(cb_upload, 18, 18)
+    ac.setPosition(cb_upload, 10, 55)
+    ac.addOnCheckBoxChanged(cb_upload, toggle_check)
+    ac.setValue(cb_upload, 1)
+    toggle_check("Upload to Cloud", 1) # Simulate a value change to trigger the listener
 
 def acMain(ac_version):
     global track_length, lapController
@@ -61,7 +70,10 @@ def acUpdate(deltaT):
     global track_length
     global lap_number, lap_data
     global lapController
+    global session_id
 
+
+    # TODO: Test? 
     time.sleep(0.001)
 
     current_s_id = info.graphics.session

@@ -42,7 +42,10 @@ class LapController:
         self.pit_lap = False
         self.lap_data_points = [None for _ in range(track_length)]
 
-        # from sample_data.sample_large import LAP
+        self.is_logging = False
+        self.is_uploading = False
+
+        # from sample_data.sample import LAP
         # test_e_data = LAP
 
         # request_thread = threading.Thread(target=send_session_data, args=(test_e_data, DATA_SEND_URL))
@@ -78,12 +81,16 @@ class LapController:
             self.session_time.strftime("%d%m%Y%H%M"),
         )
         b = json.dumps(s)
-        with open(os.path.join(log_dir, file_name), "w") as f:
-            f.writelines(b)
-        self.prep_session_send(s)
+        if self.is_logging:
+            with open(os.path.join(log_dir, file_name), "w") as f:
+                f.writelines(b)
+        if self.is_uploading:
+            self.prep_session_send(s)
+        if not self.is_logging and not self.is_uploading:
+            ac.log("Data not Logged")
 
-    def prep_session_send(self, s):
-        request_thread = threading.Thread(target=send_session_data, args=(s, DATA_SEND_URL))
+    def prep_session_send(self, data: str):
+        request_thread = threading.Thread(target=send_session_data, args=(data, DATA_SEND_URL))
         request_thread.daemon = True
         request_thread.start()
 
@@ -174,3 +181,11 @@ class LapController:
     def set_pit_lap(self):
         # ac.log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
+
+    def toggle_log(self, value):
+        self.is_logging = value
+        ac.log("Logging: {}".format(self.is_logging))
+    
+    def toggle_upload(self, value):
+        self.is_uploading = value
+        ac.log("Uploading: {}".format(self.is_uploading))
