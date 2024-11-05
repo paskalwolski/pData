@@ -31,6 +31,7 @@ class LapController:
         self.session_id = session_id
         self.car = instance_car
         self.fastest_lap = None
+        self.fastest_lap_time = None
         self.laps = []
         self.driver = driver
 
