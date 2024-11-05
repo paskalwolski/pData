@@ -4,15 +4,15 @@ import ac
 
 headers = {'Content-Type': 'application/json'} # Required to call 'requests.post()' with 'data' param (pre 'json' version)
 
-def send_session_data(data, url):
+def send_session_data(string_data, url):
     ac.log("starting data send")
     try:
-        r = requests.post(url, data=data, headers=headers)
+        r = requests.post(url, data=string_data, headers=headers)
         session_data = r.json()
         session_id = session_data.get("sessionId", "INVALID")
         ac.log("All Done: {}".format(session_id))
-    except: 
-        ac.log("Something went wrong")
+    except Exception as e: 
+        ac.log("Something went wrong: {}".format(e))
 
 
 def test_multi():

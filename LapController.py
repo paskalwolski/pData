@@ -47,6 +47,7 @@ class LapController:
 
         # from sample_data.sample import LAP
         # test_e_data = LAP
+        # self.prep_session_send(test_e_data)
 
         # request_thread = threading.Thread(target=send_session_data, args=(test_e_data, DATA_SEND_URL))
         # request_thread.daemon = True
@@ -67,7 +68,7 @@ class LapController:
         }
         return data
 
-    def end_session(self):
+    def end_session(self, wait_flag=False):
         s = self.get_export_data()
         # TODO: Catch only discarded laps?
         if len(s["laps"]) == 0:
@@ -85,14 +86,17 @@ class LapController:
             with open(os.path.join(log_dir, file_name), "w") as f:
                 f.writelines(b)
         if self.is_uploading:
-            self.prep_session_send(s)
+            self.prep_session_send(s, wait_flag)
         if not self.is_logging and not self.is_uploading:
             ac.log("Data not Logged")
 
-    def prep_session_send(self, data: str):
+    def prep_session_send(self, data: str, wait_flag: bool = False):
+        if isinstance(data, dict):
+            data = json.dumps(data)
         request_thread = threading.Thread(target=send_session_data, args=(data, DATA_SEND_URL))
         request_thread.daemon = True
         request_thread.start()
+        if wait_flag: request_thread.join()
 
     def start_session(self, s_id: int):
         # Close the last session
@@ -108,7 +112,7 @@ class LapController:
         return SESSION_LUT[self.session_id][1]
 
     def end_event(self):
-        self.end_session()
+        self.end_session(wait_flag=True)
         pass
 
     def start_lap(self, lap_number, last_lap_time=None):
