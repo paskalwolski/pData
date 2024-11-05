@@ -433,7 +433,7 @@ class Session(SessionRedirectMixin):
 
     def send(self, request, **kwargs):
         """Send a given PreparedRequest."""
-        # Set defaults that the hooks can utilize to ensure they always have
+        # Set default that the hooks can utilize to ensure they always have
         # the correct parameters to reproduce the previous request.
         kwargs.setdefault('stream', self.stream)
         kwargs.setdefault('verify', self.verify)

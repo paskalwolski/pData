@@ -1,5 +1,6 @@
 import sys
 import os
+import time
  # Load the required external libs
 sys.path.append("apps/python/pData/deps/stdlib64")
 sys.path.append("apps/python/pData/deps")
@@ -40,7 +41,7 @@ def init_app(app_label):
 
 def acMain(ac_version):
     global track_length, lapController
-    ac.console("Starting the new app")   
+    ac.log(sys.version)  
     track = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
     track_config = ac.getTrackConfiguration(0)
@@ -60,6 +61,8 @@ def acUpdate(deltaT):
     global track_length
     global lap_number, lap_data
     global lapController
+
+    time.sleep(0.001)
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 

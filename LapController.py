@@ -2,7 +2,9 @@ from datetime import datetime
 import os
 import json
 import ac
-import requests
+import threading
+
+from ext_requests import test_multi, send_session_data
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -10,8 +12,8 @@ SESSION_LUT = (
     (2, "RACE"),
 )
 
-DATA_SEND_URL = "https://tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
-DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
+DATA_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
+# DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
 
 class LapController:
     def __init__(
@@ -39,6 +41,13 @@ class LapController:
         self.lap_invalid = False
         self.pit_lap = False
         self.lap_data_points = [None for _ in range(track_length)]
+
+        # from sample_data.sample_large import LAP
+        # test_e_data = LAP
+
+        # request_thread = threading.Thread(target=send_session_data, args=(test_e_data, DATA_SEND_URL))
+        # request_thread.daemon = True
+        # request_thread.start()
 
     def get_export_data(self):
         data = {
@@ -71,13 +80,12 @@ class LapController:
         b = json.dumps(s)
         with open(os.path.join(log_dir, file_name), "w") as f:
             f.writelines(b)
-        self.send_session_data(s)
+        self.prep_session_send(s)
 
-    def send_session_data(self, s):
-        # Send the export data to the 
-        res = requests.post(DATA_SEND_URL, s)
-        ac.log(res.status_code)
-        ac.log(res.text)
+    def prep_session_send(self, s):
+        request_thread = threading.Thread(target=send_session_data, args=(s, DATA_SEND_URL))
+        request_thread.daemon = True
+        request_thread.start()
 
     def start_session(self, s_id: int):
         # Close the last session
