@@ -99,8 +99,13 @@ def acUpdate(deltaT):
     lap = ac.getCarState(0, acsys.CS.LapCount)
     # ac.console("Meter {} Lap {}".format(track_distance, lap))
     if lap != lapController.current_lap:
-        last_time = ac.getCarState(0, acsys.CS.LastLap)
-        lapController.start_lap(lap, last_lap_time=last_time)
+        # New Lap Detected - is it a new session?
+        if lap == 1:
+            ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
+            lapController.start_session(current_s_id)
+        else:
+            last_time = ac.getCarState(0, acsys.CS.LastLap)
+            lapController.start_lap(lap, last_lap_time=last_time)
 
     tyres_out = info.physics.numberOfTyresOut
     invalid = True if tyres_out > 2 else False
