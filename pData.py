@@ -88,7 +88,7 @@ def acUpdate(deltaT):
         # ac.console("Dupe Discard")
         # We've already measured this meter - discard it
         return
-    if track_distance <= (track_meter + 0.5): 
+    if track_distance <= (track_meter + 0.4): 
         # This point is too early in the meter - discard it
         # ac.console("Early Discard: {} < {} + 0.5".format(track_distance, track_meter))
         return
