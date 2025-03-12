@@ -3,8 +3,9 @@ import os
 import json
 import ac
 import threading
+import configparser
 
-from ext_requests import test_multi, send_session_data
+from ext_requests import send_session_data, send_track_check 
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -13,9 +14,13 @@ SESSION_LUT = (
 )
 
 DATA_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
+TRACK_UPLOAD_URL = "https://handletrackupload-3gpdongoba-uc.a.run.app"
 # DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
 
 class LapController:
+
+    global track_exists
+
     def __init__(
         self,
         session_id,
@@ -45,13 +50,41 @@ class LapController:
         self.is_logging = False
         self.is_uploading = False
 
-        # from sample_data.sample import LAP
-        # test_e_data = LAP
-        # self.prep_session_send(test_e_data)
+        # Track Detail upload
+        self.check_track()
 
-        # request_thread = threading.Thread(target=send_session_data, args=(test_e_data, DATA_SEND_URL))
-        # request_thread.daemon = True
-        # request_thread.start()
+    def check_track(self):
+        """
+        Currently a 'check' that sends all the data even if it exists. Offloads the checking to the API
+        Could be replaced with a GET that checks existing, and compares it to current - then updates if necessary
+        """
+        track_folder_path = "" # TODO: does it start looking in the root install folder?
+        try:
+            track_ini_path = os.path.join(track_folder_path, "details.ini")
+            cp = configparser.ConfigParser()
+            cp.read(track_ini_path)
+            assert cp["margin"] == '10'
+            track_details = {
+                # TODO: Check when the 20 margin is added...
+                "name": self.track,
+                "width": cp["WIDTH"],
+                "height": cp["HEIGHT"],
+                "x_offset": cp["X_OFFSET"],
+                "y_offset": cp["Z_OFFSET"]
+            }
+            
+            track_image_path = os.path.join(track_folder_path, "map.png")
+            files = {
+                'track': (None, json.dumps(track_details), 'application/json'),
+                'image': ("{}.png".format(self.track), open(track_image_path, "rb"), "image/png")
+            }
+
+            #  Create the thread
+            request_thread = threading.Thread(target=send_track_check, args=(TRACK_UPLOAD_URL, files)) # TODO: Confirm we can send a 'complex' object to a thread
+            request_thread.daemon = True
+            request_thread.start()
+        except Exception as e:
+            ac.log("An Error occured locating track file: {}".format(e))
 
     def get_export_data(self):
         data = {

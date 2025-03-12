@@ -15,6 +15,14 @@ def send_session_data(string_data, url):
         ac.log("Something went wrong: {}".format(e))
 
 
+def send_track_check(url, file_data):
+    try:
+        r = requests.post(url, files=file_data, headers=headers)
+        track_data = r.json()
+        track_exists = track_data["exists"]
+    except Exception as e:
+        ac.log("Something went wrong: {}".format(e))
+
 def test_multi():
     hello = requests.get("https://helloworld-3gpdongoba-uc.a.run.app")
     ac.log(hello.text)
