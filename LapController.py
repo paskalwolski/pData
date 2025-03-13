@@ -5,7 +5,7 @@ import ac
 import threading
 import configparser
 
-from logging import log
+from plogging import log
 
 from ext_requests import send_session_data, send_track_check 
 
@@ -26,7 +26,8 @@ class LapController:
     def __init__(
         self,
         session_id,
-        instance_track,
+        circuit_name,
+        track_name,
         track_length,
         instance_car,
         driver,
@@ -35,7 +36,8 @@ class LapController:
     ):
         self.event_time = datetime.now()
         self.session_time = datetime.now()
-        self.track = instance_track
+        self.circuit = circuit_name
+        self.track = track_name
         self.track_length = track_length
         self.session_id = session_id
         self.car = instance_car
@@ -54,15 +56,27 @@ class LapController:
 
         # Track Detail upload
         self.check_track()
+    
+    @property
+    def track_name(self):
+        if self.track:
+            return self.circuit + "_" + self.track
+        else:
+            return self.circuit
 
     def check_track(self):
         """
         Currently a 'check' that sends all the data even if it exists. Offloads the checking to the API
         Could be replaced with a GET that checks existing, and compares it to current - then updates if necessary
         """
-        track_folder_path = "" # TODO: does it start looking in the root install folder?
+        track_folder_path = os.path.join(os.getcwd(), "content", "tracks", self.circuit)
+        if self.track:
+            track_folder_path = os.path.join(track_folder_path, self.track)
+
+        log(track_folder_path)
+        return
         try:
-            track_ini_path = os.path.join(track_folder_path, "details.ini")
+            track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
             cp = configparser.ConfigParser()
             cp.read(track_ini_path)
             assert cp["margin"] == '10'

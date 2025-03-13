@@ -2,7 +2,7 @@ import json
 import requests
 import ac
 
-from logging import log
+from plogging import log
 
 headers = {'Content-Type': 'application/json'} # Required to call 'requests.post()' with 'data' param (pre 'json' version)
 
