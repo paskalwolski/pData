@@ -5,6 +5,8 @@ import ac
 import threading
 import configparser
 
+from logging import log
+
 from ext_requests import send_session_data, send_track_check 
 
 SESSION_LUT = (
@@ -84,7 +86,7 @@ class LapController:
             request_thread.daemon = True
             request_thread.start()
         except Exception as e:
-            ac.log("An Error occured locating track file: {}".format(e))
+            log("An Error occured locating track file: {}".format(e))
 
     def get_export_data(self):
         data = {
@@ -121,7 +123,7 @@ class LapController:
         if self.is_uploading:
             self.prep_session_send(s, wait_flag)
         if not self.is_logging and not self.is_uploading:
-            ac.log("Data not Logged")
+            log("Data not Logged")
 
     def prep_session_send(self, data: str, wait_flag: bool = False):
         if isinstance(data, dict):
@@ -165,7 +167,7 @@ class LapController:
             "invalid": self.lap_invalid,
             "pit_lap": self.pit_lap,
         }
-        ac.log(
+        log(
             "Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
                 self.session_id,
                 self.current_lap,
@@ -196,7 +198,7 @@ class LapController:
         self.check_fastest_lap(lap_time)
 
     def set_fastest_lap(self, lap_number, lap_time):
-        ac.log("Setting fastest lap {}: {}".format(lap_number, lap_time))
+        log("Setting fastest lap {}: {}".format(lap_number, lap_time))
         self.fastest_lap = lap_number
         self.fastest_lap_time = lap_time
 
@@ -212,17 +214,17 @@ class LapController:
         self.lap_data_points[index] = data
 
     def invalidate_lap(self):
-        # ac.log("Invalidated Lap {}".format(self.lap_count))
+        # log("Invalidated Lap {}".format(self.lap_count))
         self.lap_invalid = True
 
     def set_pit_lap(self):
-        # ac.log("Pit Lap {}".format(self.lap_count))
+        # log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
 
     def toggle_log(self, value):
         self.is_logging = value
-        ac.log("Logging: {}".format(self.is_logging))
+        log("Logging: {}".format(self.is_logging))
     
     def toggle_upload(self, value):
         self.is_uploading = value
-        ac.log("Uploading: {}".format(self.is_uploading))
+        log("Uploading: {}".format(self.is_uploading))

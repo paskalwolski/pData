@@ -11,6 +11,7 @@ from LapController import LapController, SESSION_LUT
 import acsys
 import math
 from sim_info import info
+from logging import log
 
 outfile = None
 updatetime=0
@@ -50,7 +51,7 @@ def init_app(app_label):
 
 def acMain(ac_version):
     global track_length, lapController
-    ac.log(sys.version)  
+    log(sys.version)  
     track = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
     track_config = ac.getTrackConfiguration(0)
@@ -60,7 +61,7 @@ def acMain(ac_version):
     session_type = info.graphics.session
     driver = ac.getDriverName(0)
     lapController = LapController(session_type, track, round(track_length), car_name, driver)
-    ac.log(str(SESSION_LUT[session_type][1] +": "+track + "({}m) in " + car_name).format(track_length))
+    log(str(SESSION_LUT[session_type][1] +": "+track + "({}m) in " + car_name).format(track_length))
     app = init_app('pData')
     return "pData"
 
@@ -78,8 +79,8 @@ def acUpdate(deltaT):
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
-        ac.log("Ending session {}".format(lapController.get_session()))
-        ac.log("Starting session {}".format(current_s_id))
+        log("Ending session {}".format(lapController.get_session()))
+        log("Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
