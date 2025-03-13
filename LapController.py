@@ -78,7 +78,7 @@ class LapController:
             cp = configparser.ConfigParser()
             cp.read(track_ini_path)
             params = cp['PARAMETERS']
-            assert params["margin"] == '90'
+            assert params["margin"] == '10'
             track_details = {
                 # TODO: Check when the 20 margin is added...
                 "track": self.track_name,
