@@ -19,9 +19,10 @@ def send_session_data(string_data, url):
 
 def send_track_check(url, file_data):
     try:
-        r = requests.post(url, files=file_data, headers=headers)
-        track_data = r.json()
-        track_exists = track_data["exists"]
+        r = requests.post(url
+                      , files=file_data
+                    )
+        log(r)
     except Exception as e:
         log("Something went wrong: {}".format(e))
 

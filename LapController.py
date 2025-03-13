@@ -72,22 +72,22 @@ class LapController:
         track_folder_path = os.path.join(os.getcwd(), "content", "tracks", self.circuit)
         if self.track:
             track_folder_path = os.path.join(track_folder_path, self.track)
-
-        log(track_folder_path)
-        return
+        
         try:
             track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
             cp = configparser.ConfigParser()
             cp.read(track_ini_path)
-            assert cp["margin"] == '10'
+            params = cp['PARAMETERS']
+            assert params["margin"] == '90'
             track_details = {
                 # TODO: Check when the 20 margin is added...
-                "name": self.track,
-                "width": cp["WIDTH"],
-                "height": cp["HEIGHT"],
-                "x_offset": cp["X_OFFSET"],
-                "y_offset": cp["Z_OFFSET"]
+                "track": self.track_name,
+                "width": params["WIDTH"],
+                "height": params["HEIGHT"],
+                "x_offset": params["X_OFFSET"],
+                "y_offset": params["Z_OFFSET"]
             }
+            # log(track_details)
             
             track_image_path = os.path.join(track_folder_path, "map.png")
             files = {
@@ -95,10 +95,14 @@ class LapController:
                 'image': ("{}.png".format(self.track), open(track_image_path, "rb"), "image/png")
             }
 
+            # DEBUG SEND
+            # send_track_check(TRACK_UPLOAD_URL, files)
             #  Create the thread
             request_thread = threading.Thread(target=send_track_check, args=(TRACK_UPLOAD_URL, files)) # TODO: Confirm we can send a 'complex' object to a thread
             request_thread.daemon = True
             request_thread.start()
+        except AssertionError:
+            log("Unexpected Margin Found - Not sending Track Update")
         except Exception as e:
             log("An Error occured locating track file: {}".format(e))
 
