@@ -4,6 +4,7 @@ import json
 import ac
 import threading
 import configparser
+import base64
 
 from plogging import log
 
@@ -14,10 +15,6 @@ SESSION_LUT = (
     (1, "QUALIFY"),
     (2, "RACE"),
 )
-
-DATA_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
-TRACK_UPLOAD_URL = "https://handletrackupload-3gpdongoba-uc.a.run.app"
-# DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
 
 class LapController:
 
@@ -74,31 +71,28 @@ class LapController:
             track_folder_path = os.path.join(track_folder_path, self.track)
         
         try:
+            # Read the track ini data
             track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
             cp = configparser.ConfigParser()
             cp.read(track_ini_path)
             params = cp['PARAMETERS']
             assert params["margin"] == '10'
+            
+            # Read the track image
+            track_image_path = os.path.join(track_folder_path, "map.png")
+
             track_details = {
                 # TODO: Check when the 20 margin is added...
-                "track": self.track_name,
+                "trackName": self.track_name,
                 "width": params["WIDTH"],
                 "height": params["HEIGHT"],
-                "x_offset": params["X_OFFSET"],
-                "y_offset": params["Z_OFFSET"]
-            }
-            # log(track_details)
-            
-            track_image_path = os.path.join(track_folder_path, "map.png")
-            files = {
-                'track': (None, json.dumps(track_details), 'application/json'),
-                'image': ("{}.png".format(self.track), open(track_image_path, "rb"), "image/png")
+                "xOffset": params["X_OFFSET"],
+                "yOffset": params["Z_OFFSET"], 
+                'image': base64.b64decode(open(track_image_path, "rb")).decode('utf-8'),
             }
 
-            # DEBUG SEND
-            # send_track_check(TRACK_UPLOAD_URL, files)
             #  Create the thread
-            request_thread = threading.Thread(target=send_track_check, args=(TRACK_UPLOAD_URL, files)) # TODO: Confirm we can send a 'complex' object to a thread
+            request_thread = threading.Thread(target=send_track_check, args=(track_details))
             request_thread.daemon = True
             request_thread.start()
         except AssertionError:
@@ -146,7 +140,7 @@ class LapController:
     def prep_session_send(self, data: str, wait_flag: bool = False):
         if isinstance(data, dict):
             data = json.dumps(data)
-        request_thread = threading.Thread(target=send_session_data, args=(data, DATA_SEND_URL))
+        request_thread = threading.Thread(target=send_session_data, args=(data))
         request_thread.daemon = True
         request_thread.start()
         if wait_flag: request_thread.join()
