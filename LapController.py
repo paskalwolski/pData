@@ -95,7 +95,7 @@ class LapController:
 
             # # Debug Request
             # send_track_check(track_details)
-            #  Create the thread
+            # Create the thread
             request_thread = threading.Thread(target=send_track_check, args=(track_details))
             request_thread.daemon = True
             request_thread.start()
@@ -109,7 +109,7 @@ class LapController:
             "eventTime": self.event_time.isoformat(),
             "driver": self.driver,
             "sessionTime": self.session_time.isoformat(),
-            "track": self.track,
+            "track": self.track_name,
             "car": self.car,
             "sessionType": self.get_session(),
             "lapCount": self.current_lap,
@@ -126,7 +126,7 @@ class LapController:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
-            self.track,
+            self.track_name,
             self.car,
             self.get_session(),
             self.current_lap,
@@ -144,6 +144,11 @@ class LapController:
     def prep_session_send(self, data: str, wait_flag: bool = False):
         if isinstance(data, dict):
             data = json.dumps(data)
+
+        # # debug send
+        # send_session_data(data)
+        
+        # Thread Send
         request_thread = threading.Thread(target=send_session_data, args=(data))
         request_thread.daemon = True
         request_thread.start()
