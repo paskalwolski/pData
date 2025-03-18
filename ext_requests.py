@@ -26,8 +26,8 @@ def send_session_data(string_data):
 def send_track_check(track_data):
     try:
         track_check_data = json.dumps({"trackName": track_data["trackName"]})
-        r = requests.get(TRACK_CHECK_URL, data=track_check_data, headers=headers)
-        exists = r.json()["exists"]
+        r = requests.post(TRACK_CHECK_URL, data=track_check_data, headers=headers)
+        exists = r.json()['exists']
         if not exists:
             log("Uploading Track Data {}".format(track_data["trackName"]))
             track_post_data = json.dumps(track_data)

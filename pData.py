@@ -60,7 +60,7 @@ def acMain(ac_version):
     session_type = info.graphics.session
     driver = ac.getDriverName(0)
     lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
-    log(str(SESSION_LUT[session_type][1] +": "+circuit+ "- {}({}m) in " + car_name).format(track, track_length))
+    log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
     app = init_app('pData')
     return "pData"
 

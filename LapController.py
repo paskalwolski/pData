@@ -80,7 +80,9 @@ class LapController:
             
             # Read the track image
             track_image_path = os.path.join(track_folder_path, "map.png")
-
+            log("Using track file {}".format(track_image_path))
+            with open(track_image_path, 'rb') as f:
+                img = f.read()
             track_details = {
                 # TODO: Check when the 20 margin is added...
                 "trackName": self.track_name,
@@ -88,9 +90,11 @@ class LapController:
                 "height": params["HEIGHT"],
                 "xOffset": params["X_OFFSET"],
                 "yOffset": params["Z_OFFSET"], 
-                'image': base64.b64decode(open(track_image_path, "rb")).decode('utf-8'),
+                'image': base64.b64encode(img).decode('utf-8'),
             }
 
+            # # Debug Request
+            # send_track_check(track_details)
             #  Create the thread
             request_thread = threading.Thread(target=send_track_check, args=(track_details))
             request_thread.daemon = True
