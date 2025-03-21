@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 import time
  # Load the required external libs
 sys.path.append("apps/python/pData/deps/stdlib64")
@@ -11,6 +12,7 @@ from LapController import LapController, SESSION_LUT
 import acsys
 import math
 from sim_info import info
+from plogging import log
 
 outfile = None
 updatetime=0
@@ -50,17 +52,16 @@ def init_app(app_label):
 
 def acMain(ac_version):
     global track_length, lapController
-    ac.log(sys.version)  
-    track = ac.getTrackName(0)
+    log(sys.version)  
+    circuit = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
-    track_config = ac.getTrackConfiguration(0)
-    if track_config and track_config != track: track = "{} {}".format(track, track_config)
+    track = ac.getTrackConfiguration(0)
     car_name = ac.getCarName(0)
 
     session_type = info.graphics.session
     driver = ac.getDriverName(0)
-    lapController = LapController(session_type, track, round(track_length), car_name, driver)
-    ac.log(str(SESSION_LUT[session_type][1] +": "+track + "({}m) in " + car_name).format(track_length))
+    lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
+    log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
     app = init_app('pData')
     return "pData"
 
@@ -74,12 +75,12 @@ def acUpdate(deltaT):
 
 
     # TODO: Test? 
-    time.sleep(0.001)
+    # time.sleep(0.001)
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
-        ac.log("Ending session {}".format(lapController.get_session()))
-        ac.log("Starting session {}".format(current_s_id))
+        log("Ending session {}".format(lapController.get_session()))
+        log("Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
@@ -147,4 +148,7 @@ def acShutdown():
     global lapController
     ac.console('Ending the session')
     lapController.end_event()
-    pass
+    log("Waiting for {} open threads...".format(threading.active_count()))
+    for thread in threading.enumerate():
+        if thread.name.startswith("pdata"):
+            thread.join()

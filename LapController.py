@@ -3,8 +3,12 @@ import os
 import json
 import ac
 import threading
+import configparser
+import base64
 
-from ext_requests import test_multi, send_session_data
+from plogging import log
+
+from ext_requests import send_session_data, send_track_check
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -12,14 +16,13 @@ SESSION_LUT = (
     (2, "RACE"),
 )
 
-DATA_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
-# DATA_SEND_URL = "http://127.0.0.1:5001/tidy-jetty-437707-n7/us-central1/handleSessionSubmit"
-
 class LapController:
+
     def __init__(
         self,
         session_id,
-        instance_track,
+        circuit_name,
+        track_name,
         track_length,
         instance_car,
         driver,
@@ -28,7 +31,8 @@ class LapController:
     ):
         self.event_time = datetime.now()
         self.session_time = datetime.now()
-        self.track = instance_track
+        self.circuit = circuit_name
+        self.track = track_name
         self.track_length = track_length
         self.session_id = session_id
         self.car = instance_car
@@ -45,20 +49,67 @@ class LapController:
         self.is_logging = False
         self.is_uploading = False
 
-        # from sample_data.sample import LAP
-        # test_e_data = LAP
-        # self.prep_session_send(test_e_data)
+        # Track Detail upload
+        self.check_track()
 
-        # request_thread = threading.Thread(target=send_session_data, args=(test_e_data, DATA_SEND_URL))
-        # request_thread.daemon = True
-        # request_thread.start()
+        # log("Currently {} thread open".format(threading.active_count()))
+        # for thread in threading.enumerate():
+        #     log("{}: {}".format(thread, thread.name))
+
+        log("Completed Controller Setup")
+    
+    @property
+    def track_name(self):
+        if self.track:
+            return self.circuit + "_" + self.track
+        else:
+            return self.circuit
+
+    def check_track(self):
+        """
+        Currently a 'check' that sends all the data even if it exists. Offloads the checking to the API
+        Could be replaced with a GET that checks existing, and compares it to current - then updates if necessary
+        """
+        track_folder_path = os.path.join(os.getcwd(), "content", "tracks", self.circuit)
+        if self.track:
+            track_folder_path = os.path.join(track_folder_path, self.track)
+        
+        # try:
+            # Read the track ini data
+            track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
+            cp = configparser.ConfigParser()
+            cp.read(track_ini_path)
+            params = cp['PARAMETERS']
+            
+            # Read the track image
+            track_image_path = os.path.join(track_folder_path, "map.png")
+            log("Using track file {}".format(track_image_path))
+            with open(track_image_path, 'rb') as f:
+                img = f.read()
+            track_details = {
+                # TODO: Check when the 20 margin is added...
+                "trackName": self.track_name,
+                "width": params["WIDTH"],
+                "height": params["HEIGHT"],
+                "xOffset": params["X_OFFSET"],
+                "yOffset": params["Z_OFFSET"],
+                "margin": params["MARGIN"],
+                'image': base64.b64encode(img).decode('utf-8'),
+            }
+
+            # # Debug Request
+            # send_track_check(json.dumps(track_details), self.track_name, logger=log)
+            # Create the thread
+            request_thread = threading.Thread(name='pdata_track_check', target=send_track_check, args=(json.dumps(track_details), self.track_name))
+            # request_thread.daemon = True
+            request_thread.start()
 
     def get_export_data(self):
         data = {
             "eventTime": self.event_time.isoformat(),
             "driver": self.driver,
             "sessionTime": self.session_time.isoformat(),
-            "track": self.track,
+            "track": self.track_name,
             "car": self.car,
             "sessionType": self.get_session(),
             "lapCount": self.current_lap,
@@ -75,7 +126,7 @@ class LapController:
             return
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
-            self.track,
+            self.track_name,
             self.car,
             self.get_session(),
             self.current_lap,
@@ -86,14 +137,20 @@ class LapController:
             with open(os.path.join(log_dir, file_name), "w") as f:
                 f.writelines(b)
         if self.is_uploading:
+            log("Ready to Upload")
             self.prep_session_send(s, wait_flag)
         if not self.is_logging and not self.is_uploading:
-            ac.log("Data not Logged")
+            log("Data not Logged")
 
     def prep_session_send(self, data: str, wait_flag: bool = False):
         if isinstance(data, dict):
             data = json.dumps(data)
-        request_thread = threading.Thread(target=send_session_data, args=(data, DATA_SEND_URL))
+
+        # # debug send
+        # send_session_data(data, logger=log)
+        log("Starting Session Upload: Waiting {}".format(wait_flag))
+        # Thread Send
+        request_thread = threading.Thread(name='pdata_session_upload', target=send_session_data, args=(data, ))
         request_thread.daemon = True
         request_thread.start()
         if wait_flag: request_thread.join()
@@ -132,7 +189,7 @@ class LapController:
             "invalid": self.lap_invalid,
             "pit_lap": self.pit_lap,
         }
-        ac.log(
+        log(
             "Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
                 self.session_id,
                 self.current_lap,
@@ -163,7 +220,7 @@ class LapController:
         self.check_fastest_lap(lap_time)
 
     def set_fastest_lap(self, lap_number, lap_time):
-        ac.log("Setting fastest lap {}: {}".format(lap_number, lap_time))
+        log("Setting fastest lap {}: {}".format(lap_number, lap_time))
         self.fastest_lap = lap_number
         self.fastest_lap_time = lap_time
 
@@ -179,17 +236,17 @@ class LapController:
         self.lap_data_points[index] = data
 
     def invalidate_lap(self):
-        # ac.log("Invalidated Lap {}".format(self.lap_count))
+        # log("Invalidated Lap {}".format(self.lap_count))
         self.lap_invalid = True
 
     def set_pit_lap(self):
-        # ac.log("Pit Lap {}".format(self.lap_count))
+        # log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
 
     def toggle_log(self, value):
         self.is_logging = value
-        ac.log("Logging: {}".format(self.is_logging))
+        log("Logging: {}".format(self.is_logging))
     
     def toggle_upload(self, value):
         self.is_uploading = value
-        ac.log("Uploading: {}".format(self.is_uploading))
+        log("Uploading: {}".format(self.is_uploading))
