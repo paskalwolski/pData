@@ -8,7 +8,7 @@ import base64
 
 from plogging import log
 
-from ext_requests import send_session_data, send_track_check 
+from ext_requests import send_session_data, send_track_check
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -17,8 +17,6 @@ SESSION_LUT = (
 )
 
 class LapController:
-
-    global track_exists
 
     def __init__(
         self,
@@ -53,6 +51,12 @@ class LapController:
 
         # Track Detail upload
         self.check_track()
+
+        # log("Currently {} thread open".format(threading.active_count()))
+        # for thread in threading.enumerate():
+        #     log("{}: {}".format(thread, thread.name))
+
+        log("Completed Controller Setup")
     
     @property
     def track_name(self):
@@ -70,13 +74,12 @@ class LapController:
         if self.track:
             track_folder_path = os.path.join(track_folder_path, self.track)
         
-        try:
+        # try:
             # Read the track ini data
             track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
             cp = configparser.ConfigParser()
             cp.read(track_ini_path)
             params = cp['PARAMETERS']
-            assert params["margin"] == '10'
             
             # Read the track image
             track_image_path = os.path.join(track_folder_path, "map.png")
@@ -89,20 +92,17 @@ class LapController:
                 "width": params["WIDTH"],
                 "height": params["HEIGHT"],
                 "xOffset": params["X_OFFSET"],
-                "yOffset": params["Z_OFFSET"], 
+                "yOffset": params["Z_OFFSET"],
+                "margin": params["MARGIN"],
                 'image': base64.b64encode(img).decode('utf-8'),
             }
 
             # # Debug Request
-            # send_track_check(track_details)
+            # send_track_check(json.dumps(track_details), self.track_name, logger=log)
             # Create the thread
-            request_thread = threading.Thread(target=send_track_check, args=(track_details))
-            request_thread.daemon = True
+            request_thread = threading.Thread(name='pdata_track_check', target=send_track_check, args=(json.dumps(track_details), self.track_name))
+            # request_thread.daemon = True
             request_thread.start()
-        except AssertionError:
-            log("Unexpected Margin Found - Not sending Track Update")
-        except Exception as e:
-            log("An Error occured locating track file: {}".format(e))
 
     def get_export_data(self):
         data = {
@@ -137,6 +137,7 @@ class LapController:
             with open(os.path.join(log_dir, file_name), "w") as f:
                 f.writelines(b)
         if self.is_uploading:
+            log("Ready to Upload")
             self.prep_session_send(s, wait_flag)
         if not self.is_logging and not self.is_uploading:
             log("Data not Logged")
@@ -146,10 +147,10 @@ class LapController:
             data = json.dumps(data)
 
         # # debug send
-        # send_session_data(data)
-        
+        # send_session_data(data, logger=log)
+        log("Starting Session Upload: Waiting {}".format(wait_flag))
         # Thread Send
-        request_thread = threading.Thread(target=send_session_data, args=(data))
+        request_thread = threading.Thread(name='pdata_session_upload', target=send_session_data, args=(data, ))
         request_thread.daemon = True
         request_thread.start()
         if wait_flag: request_thread.join()

@@ -1,5 +1,6 @@
 import sys
 import os
+import threading
 import time
  # Load the required external libs
 sys.path.append("apps/python/pData/deps/stdlib64")
@@ -142,4 +143,7 @@ def acShutdown():
     global lapController
     ac.console('Ending the session')
     lapController.end_event()
-    pass
+    log("Waiting for {} open threads...".format(threading.active_count()))
+    for thread in threading.enumerate():
+        if thread.name.startswith("pdata"):
+            thread.join()

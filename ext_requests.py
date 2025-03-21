@@ -13,21 +13,20 @@ SESSION_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
 
 
 def send_session_data(string_data):
-    log("starting data send")
     r = requests.post(SESSION_SEND_URL, data=string_data, headers=headers)
     session_data = r.json()
     session_id = session_data.get("sessionId", "INVALID")
-    log("All Done: {}".format(session_id))
+    log("Upload: {}".format(session_id))
+    return
 
 
-def send_track_check(track_data):
-        track_check_data = json.dumps({"trackName": track_data["trackName"]})
+def send_track_check(track_data_string, track_name):
+        track_check_data = json.dumps({"trackName": track_name})
         r = requests.post(TRACK_CHECK_URL, data=track_check_data, headers=headers)
         exists = r.json()['exists']
         if not exists:
-            log("Uploading Track Data {}".format(track_data["trackName"]))
-            track_post_data = json.dumps(track_data)
-            r = requests.post(TRACK_POST_URL, data=track_post_data, headers=headers)
+            log("Uploading Track Data {}".format(track_name))
+            r = requests.post(TRACK_POST_URL, data=track_data_string, headers=headers)
         else:
-            log("Track Data Exists {}".format(track_data["trackName"]))
-        log(r)
+            log("Track Data Exists {}".format(track_name))
+        return
