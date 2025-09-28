@@ -110,7 +110,7 @@ def acUpdate(deltaT):
     # ac.console("Meter {} Lap {}".format(track_distance, lap))
     if lap != lapController.current_lap:
         # New Lap Detected - is it a new session?
-        if lap == 1:
+        if lap == 0:
             ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
             lapController.start_session(current_s_id)
         else:
