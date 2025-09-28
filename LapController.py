@@ -48,9 +48,10 @@ class LapController:
 
         self.is_logging = False
         self.is_uploading = False
+        self.is_uploading_track = False
 
-        # Track Detail upload
-        self.check_track()
+        # # Track Detail upload
+        # self.check_track()
 
         # log("Currently {} thread open".format(threading.active_count()))
         # for thread in threading.enumerate():
@@ -74,7 +75,7 @@ class LapController:
         if self.track:
             track_folder_path = os.path.join(track_folder_path, self.track)
         
-        # try:
+        try:
             # Read the track ini data
             track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
             cp = configparser.ConfigParser()
@@ -103,6 +104,16 @@ class LapController:
             request_thread = threading.Thread(name='pdata_track_check', target=send_track_check, args=(json.dumps(track_details), self.track_name))
             # request_thread.daemon = True
             request_thread.start()
+        except Exception as e:
+            log("Error with the track files")
+            log(e)
+
+    def toggle_track_upload(self, value):
+        self.is_uploading_track = value
+        log("Uploading Track: {}".format(self.is_uploading_track))
+        # On positive toggle, run the track upload
+        if self.is_uploading_track:
+            self.check_track()
 
     def get_export_data(self):
         data = {

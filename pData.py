@@ -29,6 +29,8 @@ def toggle_check(checkbox, value):
         return
     if checkbox == "Upload to Cloud":
         lapController.toggle_upload(value)
+    if checkbox == "Upload track data":
+        lapController.toggle_track_upload(value)
 
 
 def init_app(app_label):
@@ -49,6 +51,13 @@ def init_app(app_label):
     ac.addOnCheckBoxChanged(cb_upload, toggle_check)
     ac.setValue(cb_upload, 1)
     toggle_check("Upload to Cloud", 1) # Simulate a value change to trigger the listener
+    
+    cb_track = ac.addCheckBox(app, "Upload track data")
+    ac.setSize(cb_track, 18, 18)
+    ac.setPosition(cb_track, 10, 55)
+    ac.addOnCheckBoxChanged(cb_track, toggle_check)
+    ac.setValue(cb_track, 0)
+    toggle_check("Upload track data", 0) # Simulate a value change to trigger the listener
 
 def acMain(ac_version):
     global track_length, lapController
