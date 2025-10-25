@@ -51,10 +51,10 @@ def init_app(app_label):
     ac.addOnCheckBoxChanged(cb_upload, toggle_check)
     ac.setValue(cb_upload, 1)
     toggle_check("Upload to Cloud", 1) # Simulate a value change to trigger the listener
-    
+
     cb_track = ac.addCheckBox(app, "Upload track data")
     ac.setSize(cb_track, 18, 18)
-    ac.setPosition(cb_track, 10, 55)
+    ac.setPosition(cb_track, 10, 75)
     ac.addOnCheckBoxChanged(cb_track, toggle_check)
     ac.setValue(cb_track, 0)
     toggle_check("Upload track data", 0) # Simulate a value change to trigger the listener
@@ -81,10 +81,6 @@ def acUpdate(deltaT):
     global lap_number, lap_data
     global lapController
     global session_id
-
-
-    # TODO: Test? 
-    # time.sleep(0.001)
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
