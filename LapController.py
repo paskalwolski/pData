@@ -14,6 +14,7 @@ SESSION_LUT = (
     (0, "PRACTICE"),
     (1, "QUALIFY"),
     (2, "RACE"),
+    (3, "HOTLAP"),
 )
 
 class LapController:
