@@ -117,6 +117,9 @@ class LapController:
             self.check_track()
 
     def get_export_data(self):
+        # Calculate fastest lap just in time from the lap data
+        self.calculate_fastest_lap()
+        
         data = {
             "eventTime": self.event_time.isoformat(),
             "driver": self.driver,
@@ -229,20 +232,42 @@ class LapController:
                 return
         # Only valid laps here
         self.laps.append(lap_data)
-        self.check_fastest_lap(lap_time)
 
     def set_fastest_lap(self, lap_number, lap_time):
         log("Setting fastest lap {}: {}".format(lap_number, lap_time))
         self.fastest_lap = lap_number
         self.fastest_lap_time = lap_time
 
-    def check_fastest_lap(self, lap_time):
-        if not self.fastest_lap:
-            self.set_fastest_lap(self.current_lap, lap_time)
+    def calculate_fastest_lap(self):
+        """Calculate fastest lap from all valid laps in the session"""
+        if not self.laps:
             return
-        # Fastest lap already exists - check to see if this one was faster
-        if lap_time < self.fastest_lap_time:
-            self.set_fastest_lap(self.current_lap, lap_time)
+        
+        fastest = None
+        fastest_time = None
+        
+        for lap in self.laps:
+            # Skip discarded laps
+            if lap.get('discard', False):
+                continue
+            
+            lap_time = lap.get('lap_time')
+            lap_number = lap.get('lap_number')
+            
+            if lap_time and (fastest_time is None or lap_time < fastest_time):
+                fastest = lap_number
+                fastest_time = lap_time
+        
+        if fastest is not None:
+            self.set_fastest_lap(fastest, fastest_time)
+
+    def push_lap(self, lap_data):
+        target_lap_number = lap_data['lap_number']
+        # Replace the latest lap if it tracks the same lap number - otherwise append
+        if (self.laps[-1].get('lap_number') == target_lap_number):
+            self.laps[-1] = lap_data
+        else:
+            self.laps.append(lap_data)
 
     def add_lap_data(self, index, data):
         self.lap_data_points[index] = data
