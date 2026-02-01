@@ -21,6 +21,7 @@ lap_number=1
 last_meter = None
 lap_data = None
 invalid_lap_display = None
+lapController = None
 
 dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
 
@@ -63,6 +64,12 @@ def init_app(app_label):
 
 def acMain(ac_version):
     global track_length, lapController, invalid_lap_display
+    
+    # Check if we're in replay mode - if so, disable the app
+    if info.graphics.status != 2:
+        log("AC is not Live. App disabled.")
+        return "pData"
+    
     log(sys.version)  
     circuit = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
@@ -88,6 +95,10 @@ def acUpdate(deltaT):
     global lapController
     global session_id
     global invalid_lap_display
+
+    # Skip update if app wasn't initialized (e.g., in replay mode)
+    if lapController is None:
+        return
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
