@@ -13,12 +13,14 @@ import acsys
 import math
 from sim_info import info
 from plogging import log
+from data_displays import InvalidLapDisplay
 
 outfile = None
 updatetime=0
-lap_number=0
+lap_number=1
 last_meter = None
 lap_data = None
+invalid_lap_display = None
 
 dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
 
@@ -60,7 +62,7 @@ def init_app(app_label):
     toggle_check("Upload track data", 0) # Simulate a value change to trigger the listener
 
 def acMain(ac_version):
-    global track_length, lapController
+    global track_length, lapController, invalid_lap_display
     log(sys.version)  
     circuit = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
@@ -72,6 +74,10 @@ def acMain(ac_version):
     lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
     log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
     app = init_app('pData')
+    
+    # Initialize data displays (they create their own app windows)
+    invalid_lap_display = InvalidLapDisplay()
+    
     return "pData"
 
 
@@ -81,6 +87,7 @@ def acUpdate(deltaT):
     global lap_number, lap_data
     global lapController
     global session_id
+    global invalid_lap_display
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
@@ -102,10 +109,16 @@ def acUpdate(deltaT):
 
     last_meter = track_meter
 
-    lap = ac.getCarState(0, acsys.CS.LapCount)
+    # Index laps from 1
+    lap = ac.getCarState(0, acsys.CS.LapCount) + 1
+
     # ac.console("Meter {} Lap {}".format(track_distance, lap))
     if lap != lapController.current_lap:
-        # New Lap Detected - is it a new session?
+        # New Lap Detected - clear the invalidation display
+        if invalid_lap_display:
+            invalid_lap_display.clear()
+        
+        # is it a new session?
         if lap == 0:
             ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
             lapController.start_session(current_s_id)
@@ -146,7 +159,10 @@ def acUpdate(deltaT):
     # ac.console(info_str)
     
     lapController.add_lap_data(track_meter-1, update_info) # Shift the meter by 1 for track index - as tracks seem to start at 1m? 
-    if invalid: lapController.invalidate_lap()
+    if invalid:
+        # Check if this is a new invalidation (lap wasn't already invalid)
+        lapController.invalidate_lap()
+        invalid_lap_display.show(lapController.current_lap)
     if pit: lapController.set_pit_lap()
 
 def acShutdown():
