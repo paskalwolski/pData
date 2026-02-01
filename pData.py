@@ -38,7 +38,7 @@ def toggle_check(checkbox, value):
 
 def init_app(app_label):
     app = ac.newApp(app_label)
-    ac.setTitle(app, 'pData Logger')
+    ac.setTitle(app, 'pData Logging Config')
     ac.setSize(app, 180, 100)
     ac.setIconPosition(app, -100, -100)
 
@@ -63,27 +63,15 @@ def init_app(app_label):
     toggle_check("Upload track data", 0) # Simulate a value change to trigger the listener
 
 def acMain(ac_version):
-    global track_length, lapController, invalid_lap_display
     
+    
+    log(sys.version)  
     # Check if we're in replay mode - if so, disable the app
     if info.graphics.status != 2:
         log("AC is not Live. App disabled.")
         return "pData"
-    
-    log(sys.version)  
-    circuit = ac.getTrackName(0)
-    track_length = ac.getTrackLength(0)
-    track = ac.getTrackConfiguration(0)
-    car_name = ac.getCarName(0)
 
-    session_type = info.graphics.session
-    driver = ac.getDriverName(0)
-    lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
-    log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
-    app = init_app('pData')
-    
-    # Initialize data displays (they create their own app windows)
-    invalid_lap_display = InvalidLapDisplay()
+    initReportingApps()
     
     return "pData"
 
@@ -98,7 +86,10 @@ def acUpdate(deltaT):
 
     # Skip update if app wasn't initialized (e.g., in replay mode)
     if lapController is None:
-        return
+        if info.graphics.status == 2:
+            initReportingApps()
+        else:
+            return
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
@@ -174,6 +165,10 @@ def acUpdate(deltaT):
         # Check if this is a new invalidation (lap wasn't already invalid)
         lapController.invalidate_lap()
         invalid_lap_display.show(lapController.current_lap)
+    
+    # Update pit state display (this will show/hide pit message)
+    invalid_lap_display.set_pit(lapController.current_lap, pit)
+    
     if pit: lapController.set_pit_lap()
 
 def acShutdown():
@@ -184,3 +179,24 @@ def acShutdown():
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):
             thread.join()
+
+
+
+def initReportingApps():
+    """Init the lapController"""
+    global track_length, lapController, invalid_lap_display
+
+    circuit = ac.getTrackName(0)
+    track_length = ac.getTrackLength(0)
+    track = ac.getTrackConfiguration(0)
+    car_name = ac.getCarName(0)
+
+    session_type = info.graphics.session
+    driver = ac.getDriverName(0)
+    lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
+    log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
+    app = init_app('pData')
+
+    # Initialize data displays (they create their own app windows)
+    invalid_lap_display = InvalidLapDisplay()
+    

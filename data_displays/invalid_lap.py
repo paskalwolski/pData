@@ -1,7 +1,7 @@
 """
-Invalid Lap Display Module
+Lap State Display Module
 
-Handles the visual notification when a lap is invalidated.
+Handles the visual notification for lap state (invalid/pit).
 """
 
 from datetime import datetime, timedelta
@@ -10,16 +10,19 @@ import ac
 
 class InvalidLapDisplay:
     """
-    Manages the on-screen notification for lap invalidations.
+    Manages the on-screen notification for lap state (invalid and pit).
     """
     
     def __init__(self):
         """
-        Initialize the invalid lap notification UI with its own app window
+        Initialize the lap state notification UI with its own app window
         """
         self.app = None
         self.label = None
         self.visible_until = None
+        self.is_invalid = False
+        self.is_pit = False
+        self.current_lap = 0
         
         self._setup_ui()
     
@@ -28,8 +31,9 @@ class InvalidLapDisplay:
         Create and configure the UI elements in a dedicated app window
         """
         # Create a new app window for this display
-        self.app = ac.newApp("pData_InvalidLap")
+        self.app = ac.newApp("pData_LapState")
         ac.setSize(self.app, 300, 80)
+        ac.setTitle(self.app, " ") # Empty title so it's not distracting
         
         # Position the window on screen
         ac.setPosition(self.app, 200, 100)
@@ -46,10 +50,9 @@ class InvalidLapDisplay:
         # Set text styling
         ac.setFontSize(self.label, 36)
         ac.setFontAlignment(self.label, "center")
-        ac.setFontColor(self.label, 1.0, 0.2, 0.2, 1.0)  # Red color
+        ac.setFontColor(self.label, 1.0, 0.2, 0.2, 1.0)  # Red color (default for invalid)
         
         # Show but with empty text initially
-
         ac.setVisible(self.label, 1)
         ac.setText(self.label, "")
     
@@ -60,14 +63,47 @@ class InvalidLapDisplay:
         Args:
             lap_number: The lap number that was invalidated
         """
-        notification_text = "LAP {} INVALID".format(lap_number)
-        ac.setText(self.label, notification_text)
-        ac.setVisible(self.label, 1)
+        self.is_invalid = True
+        self.current_lap = lap_number
+        self._update_display()
+    
+    def set_pit(self, lap_number, in_pit):
+        """
+        Update the pit state
+        
+        Args:
+            lap_number: The current lap number
+            in_pit: Boolean indicating if currently in pit
+        """
+        self.is_pit = in_pit
+        self.current_lap = lap_number
+        self._update_display()
+    
+    def _update_display(self):
+        """
+        Update the display based on current state (pit takes priority)
+        """
+        if self.is_pit:
+            # Show blue pit message
+            notification_text = "LAP {} PIT".format(self.current_lap)
+            ac.setText(self.label, notification_text)
+            ac.setFontColor(self.label, 0.2, 0.5, 1.0, 1.0)  # Blue color
+        elif self.is_invalid:
+            # Show red invalid message
+            notification_text = "LAP {} INVALID".format(self.current_lap)
+            ac.setText(self.label, notification_text)
+            ac.setFontColor(self.label, 1.0, 0.2, 0.2, 1.0)  # Red color
+        else:
+            # Clear the display
+            ac.setText(self.label, "")
     
     def clear(self):
         """
-        Clear the notification text
+        Clear the notification state (called when a new lap starts)
         """
+        self.is_invalid = False
+        self.is_pit = False
+        self.current_lap = 0
         if self.label:
             ac.setText(self.label, "")
     
