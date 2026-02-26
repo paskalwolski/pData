@@ -53,6 +53,15 @@ def acShutdown():
     pass
 ```
 
+### Update rate
+
+`acUpdate` is tied to the **graphics frame rate**, not the physics engine. AC's physics runs at 333 Hz internally, but Python apps cannot hook into it — there is no `acPhysicsUpdate` or equivalent in the stock API. CSP (Custom Shaders Patch) extends AC scripting but its physics-rate hooks are **Lua only**.
+
+At graphics rate (e.g. 60 fps) and high speed (300 km/h = 83 m/s), the car moves ~1.4 m per frame, meaning **individual metres can be skipped entirely** at high speed or low framerate. The current sampling strategy (0.4 m threshold) does not handle this. Gap-filling is deferred to post-processing on the API side.
+
+All telemetry fields collected via `ac.getCarState()` are also available directly from shared memory (`info.physics.*`, `info.graphics.*`) which is updated at physics rate — a background thread polling `sim_info` could theoretically sample at higher rate, but this adds significant complexity and is not currently implemented.
+
+
 ## AC Python API
 
 The `ac` module is built in to AC's runtime — never import it from deps.

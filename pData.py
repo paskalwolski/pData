@@ -23,7 +23,9 @@ lap_data = None
 invalid_lap_display = None
 lapController = None
 
-dist_threshold = 0.1 # The threshold to say 'this is a valid distance for this meter' 
+# Midpoint-nearest sampling state
+best_meter_delta = None  # best (smallest) delta-from-midpoint seen for the current meter
+
 
 def toggle_check(checkbox, value):
     global lapController
@@ -83,6 +85,7 @@ def acUpdate(deltaT):
     global lapController
     global session_id
     global invalid_lap_display
+    global best_meter_delta
 
     # Skip update if app wasn't initialized (e.g., in replay mode)
     if lapController is None:
@@ -98,36 +101,33 @@ def acUpdate(deltaT):
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
+    meter_delta = abs((track_distance - track_meter) - 0.5)  # absolute distance from midpoint
+
+    is_new_meter = track_meter != last_meter
+
+    if not is_new_meter:
+        # Same meter — skip if this reading is not closer to the midpoint
+        if best_meter_delta is not None and meter_delta >= best_meter_delta:
+            # Ignore this meter point - we already have a better one
+            return
+
+    else:
+        # Check for meter and lap change only when we have a new meter
+        last_meter = track_meter
+
+        # Lap detection
+        lap = ac.getCarState(0, acsys.CS.LapCount) + 1
+        if lap != lapController.current_lap:
+            if invalid_lap_display:
+                invalid_lap_display.clear()
+            if lap == 0:
+                ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
+                lapController.start_session(current_s_id)
+            else:
+                last_time = ac.getCarState(0, acsys.CS.LastLap)
+                lapController.start_lap(lap, last_lap_time=last_time)
     
-    if last_meter == track_meter:
-        # ac.console("Dupe Discard")
-        # We've already measured this meter - discard it
-        return
-    if track_distance <= (track_meter + 0.4): 
-        # This point is too early in the meter - discard it
-        # ac.console("Early Discard: {} < {} + 0.5".format(track_distance, track_meter))
-        return
-    # We have a good distance! Track it.
-
-    last_meter = track_meter
-
-    # Index laps from 1
-    lap = ac.getCarState(0, acsys.CS.LapCount) + 1
-
-    # ac.console("Meter {} Lap {}".format(track_distance, lap))
-    if lap != lapController.current_lap:
-        # New Lap Detected - clear the invalidation display
-        if invalid_lap_display:
-            invalid_lap_display.clear()
-        
-        # is it a new session?
-        if lap == 0:
-            ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
-            lapController.start_session(current_s_id)
-        else:
-            last_time = ac.getCarState(0, acsys.CS.LastLap)
-            lapController.start_lap(lap, last_lap_time=last_time)
-
+    # Read telemetry when we are sure we'll use it
     tyres_out = info.physics.numberOfTyresOut
     invalid = True if tyres_out > 2 else False
     pit = ac.isCarInPitlane(0)
@@ -140,35 +140,26 @@ def acUpdate(deltaT):
     rpm = round(ac.getCarState(0, acsys.CS.RPM), 2)
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
-    # pos = [round(raw_pos,1) for raw_pos in pos]
 
-
-    update_info = {
+    lapController.add_lap_data(track_meter - 1, {  # -1: tracks start at 1m
         'lapTime': lap_time,
         'speed': speed,
-        'gas': gas, 
+        'gas': gas,
         'brake': brake,
         'gear': gear,
         'steer': steer,
         'rpm': rpm,
-        'pos': pos, 
-        # 'distance': track_distance, # Remove track distance, stick to indices for measurement 
-        # 'pit': pit,
-        # 'invalid': invalid,
-    }
+        'pos': pos,
+    })
+    best_meter_delta = meter_delta
 
-    # info_str = json.dumps(update_info)
-    # ac.console(info_str)
-    
-    lapController.add_lap_data(track_meter-1, update_info) # Shift the meter by 1 for track index - as tracks seem to start at 1m? 
     if invalid:
-        # Check if this is a new invalidation (lap wasn't already invalid)
+        # Mark lap invalid and update the display
         lapController.invalidate_lap()
         invalid_lap_display.show(lapController.current_lap)
-    
-    # Update pit state display (this will show/hide pit message)
+
+    # Update pit state display (shows/hides pit message)
     invalid_lap_display.set_pit(lapController.current_lap, pit)
-    
     if pit: lapController.set_pit_lap()
 
 def acShutdown():
