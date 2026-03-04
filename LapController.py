@@ -6,9 +6,10 @@ import threading
 import configparser
 import base64
 
+from DataUploader import LapUploader
 from plogging import log
 
-from ext_requests import send_session_data, send_track_check
+from ext_requests import send_track_check
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -37,8 +38,6 @@ class LapController:
         self.track_length = track_length
         self.session_id = session_id
         self.car = instance_car
-        self.fastest_lap = None
-        self.fastest_lap_time = None
         self.laps = []
         self.driver = driver
 
@@ -50,6 +49,8 @@ class LapController:
         self.is_logging = False
         self.is_uploading = False
         self.is_uploading_track = False
+
+        self.data_uploader = LapUploader(self.get_session_data())
 
         # # Track Detail upload
         # self.check_track()
@@ -109,36 +110,10 @@ class LapController:
             log("Error with the track files")
             log(e)
 
-    def toggle_track_upload(self, value):
-        self.is_uploading_track = value
-        log("Uploading Track: {}".format(self.is_uploading_track))
-        # On positive toggle, run the track upload
-        if self.is_uploading_track:
-            self.check_track()
+   
 
-    def get_export_data(self):
-        # Calculate fastest lap just in time from the lap data
-        self.calculate_fastest_lap()
-        
-        data = {
-            "eventTime": self.event_time.isoformat(),
-            "driver": self.driver,
-            "sessionTime": self.session_time.isoformat(),
-            "track": self.track_name,
-            "car": self.car,
-            "sessionType": self.get_session(),
-            "lapCount": self.current_lap,
-            "fastestLap": self.fastest_lap,
-            "fastestLapTime": self.fastest_lap_time,
-            "laps": self.laps,
-        }
-        return data
-
-    def end_session(self, wait_flag=False):
-        s = self.get_export_data()
-        # TODO: Catch only discarded laps?
-        if len(s["laps"]) == 0:
-            return
+    # TODO: Implement session logging
+    def log_session(self):
         log_dir = os.path.join(os.path.expanduser("~"), "Documents")
         file_name = "{}-{}-{}-{}_laps-{}.json".format(
             self.track_name,
@@ -151,123 +126,112 @@ class LapController:
         if self.is_logging:
             with open(os.path.join(log_dir, file_name), "w") as f:
                 f.writelines(b)
-        if self.is_uploading:
-            log("Ready to Upload")
-            self.prep_session_send(s, wait_flag)
-        if not self.is_logging and not self.is_uploading:
-            log("Data not Logged")
 
-    def prep_session_send(self, data: str, wait_flag: bool = False):
-        if isinstance(data, dict):
-            data = json.dumps(data)
-
-        # # debug send
-        # send_session_data(data, logger=log)
-        log("Starting Session Upload: Waiting {}".format(wait_flag))
-        # Thread Send
-        request_thread = threading.Thread(name='pdata_session_upload', target=send_session_data, args=(data, ))
-        request_thread.daemon = True
-        request_thread.start()
-        if wait_flag: request_thread.join()
-
-    def start_session(self, s_id: int):
-        # Close the last session
+    def start_session(self, s_id):
+        log("[session] start_session: {}".format(SESSION_LUT[s_id][1]))
+        # Ensure we end a currently running session
         self.end_session()
         self.session_time = datetime.now()
         self.session_id = s_id
+
+        self.data_uploader = LapUploader(self.get_session_data())
 
         # Reset the lap data and tracker
         self.laps = []
         self.start_lap(0)
 
+    def end_session(self):
+        log("[session] end_session: {} laps recorded".format(len(self.laps)))
+        self.end_lap()
+        if not self.laps:
+            log("[session] end_session: no laps, skipping")
+            return
+        if self.is_logging:
+            self.log_session()
+
     def get_session(self):
         return SESSION_LUT[self.session_id][1]
-
+    
+    def get_session_data(self):
+        return {
+            "eventTime": self.event_time.isoformat(),
+            "driver": self.driver,
+            "sessionTime": self.session_time.isoformat(),
+            "track": self.track_name,
+            "car": self.car,
+            "sessionType": self.get_session(),
+        }
+    
     def end_event(self):
-        self.end_session(wait_flag=True)
-        pass
+        log("[event] end_event")
+        self.end_session()
 
-    def start_lap(self, lap_number, last_lap_time=None):
-        if last_lap_time:
-            self.end_lap(last_lap_time)
+    def start_lap(self, lap_number, lap_time=None):
+        log("[lap] start_lap: {} (lap_time={})".format(lap_number, lap_time))
+        self.end_lap(lap_time)
         self.current_lap = lap_number
+        # TODO: Add logic for catching a start behind the s/f line
+
+    def end_lap(self, lap_time=None):
+        log("[lap] end_lap: lap={} lap_time={}".format(self.current_lap, lap_time))
+        # Always clear lap state, whether or not we upload
+        lap_data_points = self.lap_data_points
+        lap_invalid = self.lap_invalid
+        pit_lap = self.pit_lap
+        ac.ext_perfBegin("pdata_list_alloc")
         self.lap_data_points = [None for _ in range(self.track_length)]
+        ac.ext_perfEnd("pdata_list_alloc")
         self.lap_invalid = False
         self.pit_lap = False
-        # TODO: Add logic for catchign a start behind teh s/f line
 
-    def end_lap(self, lap_time):
-        lap_data = {
-            "lap_number": self.current_lap,
-            "lap_data": self.lap_data_points,
-            "lap_time": lap_time,
-            "invalid": self.lap_invalid,
-            "pit_lap": self.pit_lap,
-        }
+        if not lap_time:
+            log("[lap] end_lap: no lap_time, clearing state only")
+            return
+
         log(
             "Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
                 self.session_id,
                 self.current_lap,
                 lap_time,
-                self.pit_lap,
-                self.lap_invalid,
+                pit_lap,
+                lap_invalid,
             )
         )
         if self.session_id == 2:
-            # Race - we want to keep pit laps and discard invalids
-            if self.lap_invalid:
-                self.laps.append(
-                    {
-                        "lap_number": self.current_lap,
-                        "discard": True,
-                        "invalid": self.lap_invalid,
-                        "pit_lap": self.pit_lap,
-                        "lap_time": lap_time,
-                    }
-                )
+            # Race - keep pit laps, discard invalids
+            if lap_invalid:
+                self.laps.append({
+                    "lap_number": self.current_lap,
+                    "discard": True,
+                    "invalid": lap_invalid,
+                    "pit_lap": pit_lap,
+                    "lap_time": lap_time,
+                })
                 return
         else:
-            if self.lap_invalid or self.pit_lap:
-                # Do nothing with useless laps
+            if lap_invalid or pit_lap:
                 return
         # Only valid laps here
+        lap_data = {
+            "lap_number": self.current_lap,
+            "lap_data": lap_data_points,
+            "lap_time": lap_time,
+            "invalid": lap_invalid,
+            "pit_lap": pit_lap,
+        }
         self.laps.append(lap_data)
-
-    def set_fastest_lap(self, lap_number, lap_time):
-        log("Setting fastest lap {}: {}".format(lap_number, lap_time))
-        self.fastest_lap = lap_number
-        self.fastest_lap_time = lap_time
-
-    def calculate_fastest_lap(self):
-        """Calculate fastest lap from all valid laps in the session"""
-        if not self.laps:
-            return
-        
-        fastest = None
-        fastest_time = None
-        
-        for lap in self.laps:
-            # Skip discarded laps
-            if lap.get('discard', False):
-                continue
-            
-            lap_time = lap.get('lap_time')
-            lap_number = lap.get('lap_number')
-            
-            if lap_time and (fastest_time is None or lap_time < fastest_time):
-                fastest = lap_number
-                fastest_time = lap_time
-        
-        if fastest is not None:
-            self.set_fastest_lap(fastest, fastest_time)
+        self.data_uploader.dispatch_lap(lap_data)
 
     def push_lap(self, lap_data):
+        """Track a lap - either by overwriting an existing lap with the same data, or adding this as a new lap"""
         target_lap_number = lap_data['lap_number']
         # Replace the latest lap if it tracks the same lap number - otherwise append
         if (self.laps[-1].get('lap_number') == target_lap_number):
             self.laps[-1] = lap_data
         else:
             self.laps.append(lap_data)
+        # Send this lap to the backend - including lap number
+        self.data_uploader.dispatch_lap(lap_data)
 
     def add_lap_data(self, index, data):
         self.lap_data_points[index] = data
@@ -287,3 +251,9 @@ class LapController:
     def toggle_upload(self, value):
         self.is_uploading = value
         log("Uploading: {}".format(self.is_uploading))
+
+    def toggle_track_upload(self, value):
+        self.is_uploading_track = value
+        log("Uploading Track: {}".format(self.is_uploading_track))
+        if self.is_uploading_track:
+            self.check_track()

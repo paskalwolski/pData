@@ -10,6 +10,23 @@ headers = {
 TRACK_CHECK_URL = "https://checktrackdata-3gpdongoba-uc.a.run.app"
 TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
 SESSION_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
+CREATE_SESSION_URL = "https://createsession-3gpdongoba-uc.a.run.app"
+HANDLE_LAP_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
+
+
+def create_session(session_data):
+    r = requests.post(CREATE_SESSION_URL, data=json.dumps(session_data), headers=headers)
+    result = r.json()
+    log(result)
+    session_id = result.get("sessionId", None)
+    log("[request] create_session response: {}".format(session_id))
+    return session_id
+
+
+def handle_lap(lap_data):
+    r = requests.post(HANDLE_LAP_URL, data=json.dumps(lap_data), headers=headers)
+    log("[request] handle_lap response: {}".format(r.status_code))
+    return
 
 
 def send_session_data(string_data):

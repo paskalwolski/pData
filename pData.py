@@ -125,7 +125,7 @@ def acUpdate(deltaT):
                 lapController.start_session(current_s_id)
             else:
                 last_time = ac.getCarState(0, acsys.CS.LastLap)
-                lapController.start_lap(lap, last_lap_time=last_time)
+                lapController.start_lap(lap, lap_time=last_time)
     
     # Read telemetry when we are sure we'll use it
     tyres_out = info.physics.numberOfTyresOut
