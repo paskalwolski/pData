@@ -113,19 +113,19 @@ class LapController:
    
 
     # TODO: Implement session logging
-    def log_session(self):
-        log_dir = os.path.join(os.path.expanduser("~"), "Documents")
-        file_name = "{}-{}-{}-{}_laps-{}.json".format(
-            self.track_name,
-            self.car,
-            self.get_session(),
-            self.current_lap,
-            self.session_time.strftime("%d%m%Y%H%M"),
-        )
-        b = json.dumps(s)
-        if self.is_logging:
-            with open(os.path.join(log_dir, file_name), "w") as f:
-                f.writelines(b)
+    # def log_session(self):
+        # log_dir = os.path.join(os.path.expanduser("~"), "Documents")
+        # file_name = "{}-{}-{}-{}_laps-{}.json".format(
+        #     self.track_name,
+        #     self.car,
+        #     self.get_session(),
+        #     self.current_lap,
+        #     self.session_time.strftime("%d%m%Y%H%M"),
+        # )
+        # b = json.dumps(s)
+        # if self.is_logging:
+        #     with open(os.path.join(log_dir, file_name), "w") as f:
+        #         f.writelines(b)
 
     def start_session(self, s_id):
         log("[session] start_session: {}".format(SESSION_LUT[s_id][1]))
@@ -147,7 +147,8 @@ class LapController:
             log("[session] end_session: no laps, skipping")
             return
         if self.is_logging:
-            self.log_session()
+            log('Session logging is not enabled')
+            # self.log_session()
 
     def get_session(self):
         return SESSION_LUT[self.session_id][1]
