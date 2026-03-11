@@ -1,18 +1,46 @@
 import threading
+import queue
 from plogging import log
-from ext_requests import handle_lap
+from ext_requests import handle_lap, send_track_check
+
+_task_queue = queue.Queue()
+
+
+def _worker_loop():
+    log("[uploader] worker started")
+    while True:
+        task = _task_queue.get()
+        if task is None:
+            log("[uploader] worker stopping")
+            break
+        try:
+            task()
+        except Exception as e:
+            log("[uploader] task error: {}".format(e))
+    log("[uploader] worker stopped")
+
+
+_worker = threading.Thread(name='pdata_uploader', target=_worker_loop)
+_worker.daemon = False
+_worker.start()
+
+
+def stop_worker():
+    _task_queue.put(None)
+
+
+def dispatch_track_check(details_json, track_name):
+    log("[uploader] track check dispatched: {}".format(track_name))
+    _task_queue.put(lambda: send_track_check(details_json, track_name))
 
 
 class LapUploader:
     def __init__(self, session_data):
         self.session_data = session_data
-        self.lap_entries = []
-
         log("[uploader] Initialised")
 
     def reset(self):
         self.session_data = None
-        self.lap_entries = []
 
     def _upload_lap(self, lap_data):
         payload = dict(lap_data)
@@ -23,5 +51,4 @@ class LapUploader:
 
     def dispatch_lap(self, lap_data):
         log("[uploader] lap {} dispatched".format(lap_data.get('lapNumber')))
-        lap_thread = threading.Thread(name='pdata_uploader_lap', target=self._upload_lap, args=(lap_data,), daemon=True)
-        lap_thread.start()
+        _task_queue.put(lambda: self._upload_lap(lap_data))

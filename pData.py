@@ -9,6 +9,7 @@ os.environ["PATH"] = os.environ["PATH"] + ";."
 
 import ac
 from LapController import LapController, SESSION_LUT
+from DataUploader import stop_worker
 import acsys
 import math
 from sim_info import info
@@ -166,6 +167,7 @@ def acShutdown():
     global lapController
     ac.console('Ending the session')
     lapController.end_event()
+    stop_worker()
     log("Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):

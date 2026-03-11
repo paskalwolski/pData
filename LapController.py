@@ -2,14 +2,11 @@ from datetime import datetime
 import os
 import json
 import ac
-import threading
 import configparser
 import base64
 
-from DataUploader import LapUploader
+from DataUploader import LapUploader, dispatch_track_check
 from plogging import log
-
-from ext_requests import send_track_check
 
 SESSION_LUT = (
     (0, "PRACTICE"),
@@ -100,12 +97,7 @@ class LapController:
                 'image': base64.b64encode(img).decode('utf-8'),
             }
 
-            # # Debug Request
-            # send_track_check(json.dumps(track_details), self.track_name, logger=log)
-            # Create the thread
-            request_thread = threading.Thread(name='pdata_track_check', target=send_track_check, args=(json.dumps(track_details), self.track_name))
-            # request_thread.daemon = True
-            request_thread.start()
+            dispatch_track_check(json.dumps(track_details), self.track_name)
         except Exception as e:
             log("Error with the track files")
             log(e)
