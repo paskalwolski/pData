@@ -155,12 +155,12 @@ class LapController:
     
     def get_session_data(self):
         return {
-            "eventTime": self.event_time.isoformat(),
             "driver": self.driver,
-            "sessionTime": self.session_time.isoformat(),
-            "track": self.track_name,
             "car": self.car,
+            "track": self.track_name,
+            "sessionTime": self.session_time.isoformat(),
             "sessionType": self.get_session(),
+            "eventTime": self.event_time.isoformat(),
         }
     
     def end_event(self):
@@ -202,11 +202,11 @@ class LapController:
             # Race - keep pit laps, discard invalids
             if lap_invalid:
                 self.laps.append({
-                    "lap_number": self.current_lap,
+                    "lapNumber": self.current_lap,
                     "discard": True,
-                    "invalid": lap_invalid,
-                    "pit_lap": pit_lap,
-                    "lap_time": lap_time,
+                    "isValid": not lap_invalid,
+                    "isPit": pit_lap,
+                    "lapTime": lap_time,
                 })
                 return
         else:
@@ -214,18 +214,18 @@ class LapController:
                 return
         # Only valid laps here
         lap_data = {
-            "lap_number": self.current_lap,
-            "lap_data": lap_data_points,
-            "lap_time": lap_time,
-            "invalid": lap_invalid,
-            "pit_lap": pit_lap,
+            "lapNumber": self.current_lap,
+            "lapTime": lap_time,
+            "isValid": not lap_invalid,
+            "isPit": pit_lap,
+            "lapData": lap_data_points,
         }
         self.laps.append(lap_data)
         self.data_uploader.dispatch_lap(lap_data)
 
     def push_lap(self, lap_data):
         """Track a lap - either by overwriting an existing lap with the same data, or adding this as a new lap"""
-        target_lap_number = lap_data['lap_number']
+        target_lap_number = lap_data['lapNumber']
         # Replace the latest lap if it tracks the same lap number - otherwise append
         if (self.laps[-1].get('lap_number') == target_lap_number):
             self.laps[-1] = lap_data
