@@ -38,7 +38,7 @@ class LapController:
         self.laps = []
         self.driver = driver
 
-        self.current_lap = 0
+        self.current_lap = 1
         self.lap_invalid = False
         self.pit_lap = False
         self.lap_data_points = [None for _ in range(track_length)]
@@ -48,6 +48,8 @@ class LapController:
         self.is_uploading_track = False
 
         self.data_uploader = LapUploader(self.get_session_data())
+        # Trigger an HTTP Session to the Functions
+        self.data_uploader.dispatch_lap(None)
 
         # # Track Detail upload
         # self.check_track()
@@ -130,7 +132,8 @@ class LapController:
 
         # Reset the lap data and tracker
         self.laps = []
-        self.start_lap(0)
+
+        self.start_lap(1)
 
     def end_session(self):
         log("[session] end_session: {} laps recorded".format(len(self.laps)))
@@ -178,6 +181,7 @@ class LapController:
         self.pit_lap = False
 
         if not lap_time:
+            
             log("[lap] end_lap: no lap_time, clearing state only")
             return
 
@@ -213,7 +217,9 @@ class LapController:
             "lapData": lap_data_points,
         }
         self.laps.append(lap_data)
+        ac.ext_perfBegin("pdata_lap_dispatch")
         self.data_uploader.dispatch_lap(lap_data)
+        ac.ext_perfEnd("pdata_lap_dispatch")
 
     def push_lap(self, lap_data):
         """Track a lap - either by overwriting an existing lap with the same data, or adding this as a new lap"""
