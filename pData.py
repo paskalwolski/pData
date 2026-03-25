@@ -141,6 +141,7 @@ def acUpdate(deltaT):
     rpm = round(ac.getCarState(0, acsys.CS.RPM), 2)
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
+    ers = round(info.physics.kersCurrentKJ, 2)
 
     lapController.add_lap_data(track_meter - 1, {  # -1: tracks start at 1m
         'lapTime': lap_time,
@@ -151,6 +152,7 @@ def acUpdate(deltaT):
         'steer': steer,
         'rpm': rpm,
         'pos': pos,
+        'ers': ers,
     })
     best_meter_delta = meter_delta
 
