@@ -8,7 +8,7 @@ sys.path.append("apps/python/pData/deps")
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 import ac
-from LapController import LapController, SESSION_LUT
+from LapController import TELEMETRY_POINTS, LapController, SESSION_LUT
 from DataUploader import stop_worker
 import acsys
 import math
@@ -144,15 +144,15 @@ def acUpdate(deltaT):
     ers = round(info.physics.kersCurrentKJ, 2)
 
     lapController.add_lap_data(track_meter - 1, {  # -1: tracks start at 1m
-        'lapTime': lap_time,
-        'speed': speed,
-        'gas': gas,
-        'brake': brake,
-        'gear': gear,
-        'steer': steer,
-        'rpm': rpm,
-        'pos': pos,
-        'ers': ers,
+        TELEMETRY_POINTS.lapTime: lap_time,
+        TELEMETRY_POINTS.speed: speed,
+        TELEMETRY_POINTS.gas: gas,
+        TELEMETRY_POINTS.brake: brake,
+        TELEMETRY_POINTS.gear: gear,
+        TELEMETRY_POINTS.steer: steer,
+        TELEMETRY_POINTS.rpm: rpm,
+        TELEMETRY_POINTS.pos: pos,
+        TELEMETRY_POINTS.ers: ers,
     })
     best_meter_delta = meter_delta
 

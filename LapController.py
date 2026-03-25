@@ -15,6 +15,18 @@ SESSION_LUT = (
     (3, "HOTLAP"),
 )
 
+class TELEMETRY_POINTS:
+    fields = ['lapTime','speed','gas','brake','gear','steer','rpm','pos','ers',]
+    lapTime = 'lapTime'
+    speed = 'speed'
+    gas = 'gas'
+    brake = 'brake'
+    gear = 'gear'
+    steer = 'steer'
+    rpm = 'rpm'
+    pos = 'pos'
+    ers = 'ers'
+
 class LapController:
 
     def __init__(
@@ -41,7 +53,8 @@ class LapController:
         self.current_lap = 1
         self.lap_invalid = False
         self.pit_lap = False
-        self.lap_data_points = [None for _ in range(track_length)]
+        self.lap_data_points = {}
+        self._reset_data_points()
 
         self.is_logging = False
         self.is_uploading = False
@@ -66,6 +79,9 @@ class LapController:
             return self.circuit + "_" + self.track
         else:
             return self.circuit
+        
+    def _reset_data_points(self):
+        self.lap_data_points = {f: [None for _ in range(self.track_length)] for f in TELEMETRY_POINTS.fields}
 
     def check_track(self):
         """
@@ -175,7 +191,7 @@ class LapController:
         lap_invalid = self.lap_invalid
         pit_lap = self.pit_lap
         ac.ext_perfBegin("pdata_list_alloc")
-        self.lap_data_points = [None for _ in range(self.track_length)]
+        self._reset_data_points()
         ac.ext_perfEnd("pdata_list_alloc")
         self.lap_invalid = False
         self.pit_lap = False
@@ -233,7 +249,9 @@ class LapController:
         self.data_uploader.dispatch_lap(lap_data)
 
     def add_lap_data(self, index, data):
-        self.lap_data_points[index] = data
+        for k, v in data.items():
+            if k in self.lap_data_points:
+                self.lap_data_points[k][index] = v
 
     def invalidate_lap(self):
         # log("Invalidated Lap {}".format(self.lap_count))
