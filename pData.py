@@ -151,7 +151,9 @@ def acUpdate(deltaT):
         TELEMETRY_POINTS.gear: gear,
         TELEMETRY_POINTS.steer: steer,
         TELEMETRY_POINTS.rpm: rpm,
-        TELEMETRY_POINTS.pos: pos,
+        TELEMETRY_POINTS.posX: pos[0],
+        TELEMETRY_POINTS.posY: pos[1],
+        TELEMETRY_POINTS.posZ: pos[2],
         TELEMETRY_POINTS.ers: ers,
     })
     best_meter_delta = meter_delta
