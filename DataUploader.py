@@ -23,7 +23,7 @@ def _worker_loop():
     log("[uploader] worker stopped")
 
 
-_worker = threading.Thread(name='pdata_uploader', target=_worker_loop)
+_worker = threading.Thread(name="pdata_uploader", target=_worker_loop)
 _worker.daemon = False
 _worker.start()
 
@@ -40,22 +40,34 @@ def dispatch_track_check(details_json, track_name):
 class LapUploader:
     def __init__(self, session_data):
         self.session_data = session_data
+        self.session_id = None
+        self.session_lap_ids = []
         log("[uploader] Initialised")
 
     def reset(self):
+        log("[uploader] Clearing Session {}".format(self.session_id))
+        for lap_id in self.session_lap_ids:
+            log("[uploader] Lap {}".format(lap_id))
         self.session_data = None
+        self.session_id = None
+        self.session_lap_ids = []
 
-    def _upload_lap(self, lap_data = {}):
+    def _upload_lap(self, lap_data={}):
         payload = dict(lap_data) if lap_data else {}
         if lap_data:
-            log("[request] POST lap: lap={}".format(payload.get('lapNumber')))
-            payload['sessionData'] = self.session_data
-        handle_lap(payload)
+            log("[request] POST lap: lap={}".format(payload.get("lapNumber")))
+            payload["sessionData"] = self.session_data
+            if self.session_id:
+                payload["sessionId"] = self.session_id
+        lap_id, session_id = handle_lap(payload)
+        if lap_id:
+            self.session_id = session_id
+            self.session_lap_ids.append(lap_id)
 
     def dispatch_lap(self, lap_data):
         if lap_data:
-            log("[uploader] lap {} dispatched".format(lap_data.get('lapNumber')))
-        else: 
+            log("[uploader] lap dispatched")
+        else:
             log("[uploader] Sending Session Handshake")
         ac.ext_perfBegin("pdata_lap_queue")
         _task_queue.put(lambda: self._upload_lap(lap_data))

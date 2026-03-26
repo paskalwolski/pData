@@ -39,7 +39,10 @@ def handle_lap(lap_data):
     r = _post(HANDLE_LAP_URL, data=data)
     ac.ext_perfEnd("pdata_lap_send")
     log("[request] handle_lap response: {}".format(r.status_code))
-    return
+    response = r.json()
+    lap_id = response.get('lapId', None)
+    session_id = response.get('sessionId', None)
+    return lap_id, session_id
 
 
 def send_session_data(string_data):
