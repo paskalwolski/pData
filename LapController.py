@@ -16,7 +16,7 @@ SESSION_LUT = (
 )
 
 class TELEMETRY_POINTS:
-    fields = ['lapTime','speed','gas','brake','gear','steer','rpm','pos_x', 'pos_y', 'pos_z','ers',]
+    fields = ['lapTime','speed','gas','brake','gear','steer','rpm','posX', 'posY', 'posZ','ers',]
     lapTime = 'lapTime'
     speed = 'speed'
     gas = 'gas'
