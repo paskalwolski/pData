@@ -4,7 +4,7 @@ import traceback
 
 import ac
 from plogging import log
-from ext_requests import handle_lap, send_track_check
+from ext_requests import handle_lap, send_track_check, close_session
 
 _task_queue = queue.Queue()
 
@@ -23,7 +23,7 @@ def _worker_loop():
     log("[uploader] worker stopped")
 
 
-_worker = threading.Thread(name='pdata_uploader', target=_worker_loop)
+_worker = threading.Thread(name="pdata_uploader", target=_worker_loop)
 _worker.daemon = False
 _worker.start()
 
@@ -40,23 +40,43 @@ def dispatch_track_check(details_json, track_name):
 class LapUploader:
     def __init__(self, session_data):
         self.session_data = session_data
+        self.session_id = None
+        self.session_lap_ids = []
         log("[uploader] Initialised")
 
-    def reset(self):
+    def reset(self, lap_count):
+        log("[uploader] Clearing Session {}".format(self.session_id))
+        for lap_id in self.session_lap_ids:
+            log("[uploader] Lap {}".format(lap_id))
+        _task_queue.put(lambda: self._close_session(lap_count))
         self.session_data = None
+        self.session_id = None
+        self.session_lap_ids = []
 
-    def _upload_lap(self, lap_data = {}):
+    def _upload_lap(self, lap_data={}):
         payload = dict(lap_data) if lap_data else {}
         if lap_data:
-            log("[request] POST lap: lap={}".format(payload.get('lapNumber')))
-            payload['sessionData'] = self.session_data
-        handle_lap(payload)
+            payload["sessionData"] = self.session_data
+            if self.session_id:
+                payload["sessionId"] = self.session_id
+        lap_id, session_id = handle_lap(payload)
+        if lap_id:
+            self.session_id = session_id
+            self.session_lap_ids.append(lap_id)
 
     def dispatch_lap(self, lap_data):
         if lap_data:
-            log("[uploader] lap {} dispatched".format(lap_data.get('lapNumber')))
-        else: 
+            log("[uploader] lap dispatched: Session {}".format(self.session_id if self.session_id else "Unknown"))
+        else:
             log("[uploader] Sending Session Handshake")
         ac.ext_perfBegin("pdata_lap_queue")
         _task_queue.put(lambda: self._upload_lap(lap_data))
         ac.ext_perfEnd("pdata_lap_queue")
+
+    def _close_session(self, lap_count):
+        if self.session_id:
+            log("[uploader] Closing Session {}".format(self.session_id))
+            close_session(self.session_id, lap_count)
+        else:
+            log('[uploader] No session to close')
+        
