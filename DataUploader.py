@@ -56,7 +56,6 @@ class LapUploader:
     def _upload_lap(self, lap_data={}):
         payload = dict(lap_data) if lap_data else {}
         if lap_data:
-            log("[request] POST lap: lap={}".format(payload.get("lapNumber")))
             payload["sessionData"] = self.session_data
             if self.session_id:
                 payload["sessionId"] = self.session_id
@@ -67,7 +66,7 @@ class LapUploader:
 
     def dispatch_lap(self, lap_data):
         if lap_data:
-            log("[uploader] lap dispatched")
+            log("[uploader] lap dispatched: Session {}".format(self.session_id if self.session_id else "Unknown"))
         else:
             log("[uploader] Sending Session Handshake")
         ac.ext_perfBegin("pdata_lap_queue")

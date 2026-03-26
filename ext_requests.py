@@ -43,10 +43,10 @@ def send_track_check(track_data_string, track_name):
     r = _post(TRACK_CHECK_URL, data=track_check_data)
     exists = r.json()['exists']
     if not exists:
-        log("Uploading Track Data {}".format(track_name))
+        log("[request] Uploading Track Data {}".format(track_name))
         _post(TRACK_POST_URL, data=track_data_string)
     else:
-        log("Track Data Exists {}".format(track_name))
+        log("[request] Track Data Exists {}".format(track_name))
     return
 
 def close_session(session_id, session_lap_count):

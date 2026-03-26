@@ -97,8 +97,8 @@ def acUpdate(deltaT):
 
     current_s_id = info.graphics.session
     if current_s_id != lapController.session_id: 
-        log("Ending session {}".format(lapController.get_session()))
-        log("Starting session {}".format(current_s_id))
+        log("[ac] Ending session {}".format(lapController.get_session()))
+        log("[ac] Starting session {}".format(current_s_id))
         lapController.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
@@ -122,7 +122,7 @@ def acUpdate(deltaT):
             if invalid_lap_display:
                 invalid_lap_display.clear()
             if lap == 0:
-                ac.log("Ending Session {} - LAP DETECTION".format(lapController.get_session()))
+                ac.log("[ac] Ending Session {} - LAP DETECTION".format(lapController.get_session()))
                 lapController.start_session(current_s_id)
             else:
                 last_time = ac.getCarState(0, acsys.CS.LastLap)
@@ -169,10 +169,10 @@ def acUpdate(deltaT):
 
 def acShutdown():
     global lapController
-    ac.console('Ending the session')
+    ac.console('[ac] Ending the session')
     lapController.end_event()
     stop_worker()
-    log("Waiting for {} open threads...".format(threading.active_count()))
+    log("[ac] Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):
             thread.join()

@@ -73,7 +73,7 @@ class LapController:
         # for thread in threading.enumerate():
         #     log("{}: {}".format(thread, thread.name))
 
-        log("Completed Controller Setup")
+        log("[controller] Completed Controller Setup")
     
     @property
     def track_name(self):
@@ -103,7 +103,7 @@ class LapController:
             
             # Read the track image
             track_image_path = os.path.join(track_folder_path, "map.png")
-            log("Using track file {}".format(track_image_path))
+            log("[controller] check_track: Using track file {}".format(track_image_path))
             with open(track_image_path, 'rb') as f:
                 img = f.read()
             track_details = {
@@ -119,7 +119,7 @@ class LapController:
 
             dispatch_track_check(json.dumps(track_details), self.track_name)
         except Exception as e:
-            log("Error with the track files")
+            log("[controller] check_track: Error with the track files")
             log(e)
 
    
@@ -140,7 +140,7 @@ class LapController:
         #         f.writelines(b)
 
     def start_session(self, s_id):
-        log("[session] start_session: {}".format(SESSION_LUT[s_id][1]))
+        log("[controller] start_session: {}".format(SESSION_LUT[s_id][1]))
         # Ensure we end a currently running session
         self.end_session()
         self.session_time = datetime.now()
@@ -158,12 +158,12 @@ class LapController:
         log("[controller] end_session: {} laps recorded".format(lap_count))
         self.end_lap()
         if not self.laps:
-            log("[session] end_session: no laps, skipping")
+            log("[controller] end_session: no laps, skipping")
             return
         self.data_uploader.reset(lap_count)
         
         if self.is_logging:
-            log('Session logging is not enabled')
+            log('[controller] end_session: Session logging is not enabled')
             # self.log_session()
 
     def get_session(self):
@@ -180,17 +180,17 @@ class LapController:
         }
     
     def end_event(self):
-        log("[event] end_event")
+        log("[controller] end_event")
         self.end_session()
 
     def start_lap(self, lap_number, lap_time=None):
-        log("[lap] start_lap: {} (lap_time={})".format(lap_number, lap_time))
+        log("[controller] start_lap: {} (lap_time={})".format(lap_number, lap_time))
         self.end_lap(lap_time)
         self.current_lap = lap_number
         # TODO: Add logic for catching a start behind the s/f line
 
     def end_lap(self, lap_time=None):
-        log("[lap] end_lap: lap={} lap_time={}".format(self.current_lap, lap_time))
+        log("[controller] end_lap: lap={} lap_time={}".format(self.current_lap, lap_time))
         # Always clear lap state, whether or not we upload
         lap_data_points = self.lap_data_points
         lap_invalid = self.lap_invalid
@@ -203,11 +203,11 @@ class LapController:
 
         if not lap_time:
             
-            log("[lap] end_lap: no lap_time, clearing state only")
+            log("[controller] end_lap: no lap_time, clearing state only")
             return
 
         log(
-            "Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
+            "[controller] Session {} Lap {}: {} | Pit: {} | Invalid: {}".format(
                 self.session_id,
                 self.current_lap,
                 lap_time,
@@ -268,14 +268,14 @@ class LapController:
 
     def toggle_log(self, value):
         self.is_logging = value
-        log("Logging: {}".format(self.is_logging))
+        log("[controller] Logging: {}".format(self.is_logging))
     
     def toggle_upload(self, value):
         self.is_uploading = value
-        log("Uploading: {}".format(self.is_uploading))
+        log("[controller] Uploading: {}".format(self.is_uploading))
 
     def toggle_track_upload(self, value):
         self.is_uploading_track = value
-        log("Uploading Track: {}".format(self.is_uploading_track))
+        log("[controller] Uploading Track: {}".format(self.is_uploading_track))
         if self.is_uploading_track:
             self.check_track()
