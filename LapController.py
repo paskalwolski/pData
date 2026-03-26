@@ -154,11 +154,14 @@ class LapController:
         self.start_lap(1)
 
     def end_session(self):
-        log("[session] end_session: {} laps recorded".format(len(self.laps)))
+        lap_count = len(self.laps)
+        log("[controller] end_session: {} laps recorded".format(lap_count))
         self.end_lap()
         if not self.laps:
             log("[session] end_session: no laps, skipping")
             return
+        self.data_uploader.reset(lap_count)
+        
         if self.is_logging:
             log('Session logging is not enabled')
             # self.log_session()

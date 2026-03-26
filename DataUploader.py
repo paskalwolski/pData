@@ -4,7 +4,7 @@ import traceback
 
 import ac
 from plogging import log
-from ext_requests import handle_lap, send_track_check
+from ext_requests import handle_lap, send_track_check, close_session
 
 _task_queue = queue.Queue()
 
@@ -44,10 +44,11 @@ class LapUploader:
         self.session_lap_ids = []
         log("[uploader] Initialised")
 
-    def reset(self):
+    def reset(self, lap_count):
         log("[uploader] Clearing Session {}".format(self.session_id))
         for lap_id in self.session_lap_ids:
             log("[uploader] Lap {}".format(lap_id))
+        _task_queue.put(lambda: self._close_session(lap_count))
         self.session_data = None
         self.session_id = None
         self.session_lap_ids = []
@@ -72,3 +73,11 @@ class LapUploader:
         ac.ext_perfBegin("pdata_lap_queue")
         _task_queue.put(lambda: self._upload_lap(lap_data))
         ac.ext_perfEnd("pdata_lap_queue")
+
+    def _close_session(self, lap_count):
+        if self.session_id:
+            log("[uploader] Closing Session {}".format(self.session_id))
+            close_session(self.session_id, lap_count)
+        else:
+            log('[uploader] No session to close')
+        

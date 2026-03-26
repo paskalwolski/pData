@@ -12,6 +12,7 @@ TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
 SESSION_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
 CREATE_SESSION_URL = "https://createsession-3gpdongoba-uc.a.run.app"
 HANDLE_LAP_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
+SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 
 def _post(url, data):
     for attempt in range(2):
@@ -21,14 +22,6 @@ def _post(url, data):
             if attempt == 1:
                 raise
 
-
-def create_session(session_data):
-    r = _post(CREATE_SESSION_URL, data=json.dumps(session_data))
-    result = r.json()
-    log(result)
-    session_id = result.get("sessionId", None)
-    log("[request] create_session response: {}".format(session_id))
-    return session_id
 
 
 def handle_lap(lap_data):
@@ -45,15 +38,6 @@ def handle_lap(lap_data):
     return lap_id, session_id
 
 
-def send_session_data(string_data):
-    r = _post(SESSION_SEND_URL, data=string_data)
-    session_data = r.json()
-    lap_id = session_data.get('lapId', None)
-    session_id = session_data.get("sessionId", None)
-    log("Upload: Lap {} Session {}".format(lap_id, session_id))
-    return
-
-
 def send_track_check(track_data_string, track_name):
     track_check_data = json.dumps({"trackName": track_name})
     r = _post(TRACK_CHECK_URL, data=track_check_data)
@@ -64,3 +48,10 @@ def send_track_check(track_data_string, track_name):
     else:
         log("Track Data Exists {}".format(track_name))
     return
+
+def close_session(session_id, session_lap_count):
+    session_close_data = json.dumps({'sessionId': session_id, 'lapCount': session_lap_count})
+    r = _post(SESSION_CLOSE_URL, data=session_close_data)
+    
+
+
