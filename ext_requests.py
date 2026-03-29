@@ -32,6 +32,8 @@ def handle_lap(lap_data):
     r = _post(HANDLE_LAP_URL, data=data)
     ac.ext_perfEnd("pdata_lap_send")
     log("[request] handle_lap response: {}".format(r.status_code))
+    if r.status_code == 202:
+        return None, None
     response = r.json()
     lap_id = response.get('lapId', None)
     session_id = response.get('sessionId', None)
