@@ -204,6 +204,7 @@ class LapController:
         if not lap_time:
             
             log("[controller] end_lap: no lap_time, clearing state only")
+            self.data_uploader.reset(len(self.laps))
             return
 
         log(
