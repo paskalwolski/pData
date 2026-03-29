@@ -185,6 +185,9 @@ class LapController:
 
     def start_lap(self, lap_number, lap_time=None):
         log("[controller] start_lap: {} (lap_time={})".format(lap_number, lap_time))
+        if lap_number <= self.current_lap:
+            log('[controller] Lap Conflict: re-starting current lap {}. Forcing Session Start'.format(lap_number))
+            self.start_session()
         self.end_lap(lap_time)
         self.current_lap = lap_number
         # TODO: Add logic for catching a start behind the s/f line
