@@ -17,7 +17,9 @@ SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 def _post(url, data):
     for attempt in range(2):
         try:
-            return requests.post(url, data=data, headers=headers)
+            r = requests.post(url, data=data, headers=headers)
+            log('[request] {} response {}'.format(url, r.status_code))
+            return r
         except requests.exceptions.ConnectionError:
             if attempt == 1:
                 raise

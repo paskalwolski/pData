@@ -48,19 +48,20 @@ class LapUploader:
         log("[uploader] Clearing Session {}".format(self.session_id))
         for lap_id in self.session_lap_ids:
             log("[uploader] Lap {}".format(lap_id))
-        _task_queue.put(lambda: self._close_session(lap_count))
+        _task_queue.put(lambda: self._close_session(lap_count, self.session_id))
         self.session_data = None
         self.session_id = None
         self.session_lap_ids = []
 
-    def _upload_lap(self, lap_data={}):
+    def _upload_lap(self, lap_data={}, session_data={}):
         payload = dict(lap_data) if lap_data else {}
         if lap_data:
-            payload["sessionData"] = self.session_data
+            payload["sessionData"] = session_data
             if self.session_id:
                 payload["sessionId"] = self.session_id
         lap_id, session_id = handle_lap(payload)
         if lap_id:
+            log('[uploader] received lap {} session {}'.format(lap_id, self.session_id))
             self.session_id = session_id
             self.session_lap_ids.append(lap_id)
 
@@ -70,13 +71,13 @@ class LapUploader:
         else:
             log("[uploader] Sending Session Handshake")
         ac.ext_perfBegin("pdata_lap_queue")
-        _task_queue.put(lambda: self._upload_lap(lap_data))
+        _task_queue.put(lambda: self._upload_lap(lap_data, self.session_data))
         ac.ext_perfEnd("pdata_lap_queue")
 
-    def _close_session(self, lap_count):
-        if self.session_id:
-            log("[uploader] Closing Session {}".format(self.session_id))
-            close_session(self.session_id, lap_count)
+    def _close_session(self, lap_count, session_id):
+        if session_id:
+            log("[uploader] Closing Session {}".format(session_id))
+            close_session(session_id, lap_count)
         else:
             log('[uploader] No session to close')
         

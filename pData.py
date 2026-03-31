@@ -169,13 +169,13 @@ def acUpdate(deltaT):
 
 def acShutdown():
     global lapController
-    ac.console('[ac] Ending the session')
     lapController.end_event()
     stop_worker()
     log("[ac] Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):
-            thread.join()
+            log('[ac] Waiting for thread {}'.format(thread.name))
+            thread.join(10)
 
 
 
