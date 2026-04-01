@@ -5,7 +5,8 @@ import ac
 import configparser
 import base64
 
-from DataUploader import LapUploader, dispatch_track_check
+from DataUploader import LapUploader
+from TrackDataController import TrackDataController
 from plogging import log
 
 SESSION_LUT = (
@@ -61,10 +62,13 @@ class SessionController:
         self.is_logging = False
         self.is_uploading = False
         self.is_uploading_track = False
+        log('controller initing')
+        self.track_data_controller = TrackDataController(circuit_name, track_name)
 
-        self.data_uploader = LapUploader(self.get_session_data())
+        self.lap_uploader = LapUploader(self.get_session_data())
         # Trigger an HTTP Session to the Functions
-        self.data_uploader.dispatch_lap(None)
+        self.lap_uploader.dispatch_lap(None)
+
 
         # # Track Detail upload
         # self.check_track()
@@ -75,53 +79,9 @@ class SessionController:
 
         log("[controller] Completed Controller Setup")
     
-    @property
-    def track_name(self):
-        if self.track:
-            return self.circuit + "_" + self.track
-        else:
-            return self.circuit
         
     def _reset_data_points(self):
         self.lap_data_points = {f: [None for _ in range(self.track_length)] for f in TELEMETRY_POINTS.fields}
-
-    def check_track(self):
-        """
-        Currently a 'check' that sends all the data even if it exists. Offloads the checking to the API
-        Could be replaced with a GET that checks existing, and compares it to current - then updates if necessary
-        """
-        track_folder_path = os.path.join(os.getcwd(), "content", "tracks", self.circuit)
-        if self.track:
-            track_folder_path = os.path.join(track_folder_path, self.track)
-        
-        try:
-            # Read the track ini data
-            track_ini_path = os.path.join(track_folder_path, "data", "map.ini")
-            cp = configparser.ConfigParser()
-            cp.read(track_ini_path)
-            params = cp['PARAMETERS']
-            
-            # Read the track image
-            track_image_path = os.path.join(track_folder_path, "map.png")
-            log("[controller] check_track: Using track file {}".format(track_image_path))
-            with open(track_image_path, 'rb') as f:
-                img = f.read()
-            track_details = {
-                # TODO: Check when the 20 margin is added...
-                "trackName": self.track_name,
-                "width": params["WIDTH"],
-                "height": params["HEIGHT"],
-                "xOffset": params["X_OFFSET"],
-                "yOffset": params["Z_OFFSET"],
-                "margin": params["MARGIN"],
-                'image': base64.b64encode(img).decode('utf-8'),
-            }
-
-            dispatch_track_check(json.dumps(track_details), self.track_name)
-        except Exception as e:
-            log("[controller] check_track: Error with the track files")
-            log(e)
-
 
     def start_session(self, s_id):
         log("[controller] start_session: {}".format(SESSION_LUT[s_id][1]))
@@ -130,7 +90,7 @@ class SessionController:
         self.session_time = datetime.now()
         self.session_id = s_id
 
-        self.data_uploader = LapUploader(self.get_session_data())
+        self.lap_uploader = LapUploader(self.get_session_data())
 
         # Reset the lap data and tracker
         self.laps = []
@@ -144,7 +104,7 @@ class SessionController:
         if not self.laps:
             log("[controller] end_session: no laps, skipping")
             return
-        self.data_uploader.reset(lap_count)
+        self.lap_uploader.reset(lap_count)
         
         if self.is_logging:
             log('[controller] end_session: Session logging is not enabled')
@@ -157,7 +117,7 @@ class SessionController:
         return {
             "driver": self.driver,
             "car": self.car,
-            "track": self.track_name,
+            "track": self.track_data_controller.track_id,
             "sessionTime": self.session_time.isoformat(),
             "sessionType": self.get_session(),
             "eventTime": self.event_time.isoformat(),
@@ -189,7 +149,7 @@ class SessionController:
             
             log("[controller] end_lap: no lap_time, clearing Uploader state only")
             # TODO: Compare this with end_session, which also resets the uploader
-            self.data_uploader.reset(len(self.laps))
+            self.lap_uploader.reset(len(self.laps))
             return
 
         log(
@@ -225,7 +185,7 @@ class SessionController:
         }
         self.laps.append(lap_data)
         ac.ext_perfBegin("pdata_lap_dispatch")
-        self.data_uploader.dispatch_lap(lap_data)
+        self.lap_uploader.dispatch_lap(lap_data)
         ac.ext_perfEnd("pdata_lap_dispatch")
 
     def add_lap_data(self, index, data):

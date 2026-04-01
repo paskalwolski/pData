@@ -40,16 +40,22 @@ def handle_lap(lap_data):
     return lap_id, session_id
 
 
-def send_track_check(track_data_string, track_name):
-    track_check_data = json.dumps({"trackName": track_name})
+def send_track_check(data):
+    track_check_data = json.dumps(data)
     r = _post(TRACK_CHECK_URL, data=track_check_data)
-    exists = r.json()['exists']
-    if not exists:
-        log("[request] Uploading Track Data {}".format(track_name))
-        _post(TRACK_POST_URL, data=track_data_string)
-    else:
-        log("[request] Track Data Exists {}".format(track_name))
-    return
+    if r.ok:
+        try:
+            return r.json()
+        except json.JSONDecodeError:
+            log('[uploader] No track json data received')
+            return
+    elif r.status_code == 404:
+        return {'exists': False}
+    
+def send_track_data(data):
+    track_payload = json.dumps(data)
+    r = _post(TRACK_POST_URL, data=track_payload)
+    return r.ok
 
 def close_session(session_id, session_lap_count):
     session_close_data = json.dumps({'sessionId': session_id, 'lapCount': session_lap_count})
