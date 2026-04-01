@@ -30,9 +30,6 @@ best_meter_delta = None  # best (smallest) delta-from-midpoint seen for the curr
 
 def toggle_check(checkbox, value):
     global lapController
-    if checkbox == "Export Log Files":
-        lapController.toggle_log(value)
-        return
     if checkbox == "Upload to Cloud":
         lapController.toggle_upload(value)
     if checkbox == "Upload track data":
@@ -44,12 +41,6 @@ def init_app(app_label):
     ac.setTitle(app, 'pData Logging Config')
     ac.setSize(app, 180, 100)
     ac.setIconPosition(app, -100, -100)
-
-    cb_log = ac.addCheckBox(app, "Export Log Files")
-    ac.setSize(cb_log, 18, 18)
-    ac.setPosition(cb_log, 10, 35)
-    ac.addOnCheckBoxChanged(cb_log, toggle_check)
-    ac.setValue(cb_log, 0)
 
     cb_upload = ac.addCheckBox(app, "Upload to Cloud")
     ac.setSize(cb_upload, 18, 18)

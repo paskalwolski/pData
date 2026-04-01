@@ -9,8 +9,6 @@ headers = {
 }  # Required to call 'requests.post()' with 'data' param (pre 'json' version)
 TRACK_CHECK_URL = "https://checktrackdata-3gpdongoba-uc.a.run.app"
 TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
-SESSION_SEND_URL = "https://handlesessionsubmit-3gpdongoba-uc.a.run.app"
-CREATE_SESSION_URL = "https://createsession-3gpdongoba-uc.a.run.app"
 HANDLE_LAP_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
 SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 

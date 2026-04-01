@@ -122,22 +122,6 @@ class LapController:
             log("[controller] check_track: Error with the track files")
             log(e)
 
-   
-
-    # TODO: Implement session logging
-    # def log_session(self):
-        # log_dir = os.path.join(os.path.expanduser("~"), "Documents")
-        # file_name = "{}-{}-{}-{}_laps-{}.json".format(
-        #     self.track_name,
-        #     self.car,
-        #     self.get_session(),
-        #     self.current_lap,
-        #     self.session_time.strftime("%d%m%Y%H%M"),
-        # )
-        # b = json.dumps(s)
-        # if self.is_logging:
-        #     with open(os.path.join(log_dir, file_name), "w") as f:
-        #         f.writelines(b)
 
     def start_session(self, s_id):
         log("[controller] start_session: {}".format(SESSION_LUT[s_id][1]))
@@ -244,17 +228,6 @@ class LapController:
         self.data_uploader.dispatch_lap(lap_data)
         ac.ext_perfEnd("pdata_lap_dispatch")
 
-    def push_lap(self, lap_data):
-        """Track a lap - either by overwriting an existing lap with the same data, or adding this as a new lap"""
-        target_lap_number = lap_data['lapNumber']
-        # Replace the latest lap if it tracks the same lap number - otherwise append
-        if (self.laps[-1].get('lap_number') == target_lap_number):
-            self.laps[-1] = lap_data
-        else:
-            self.laps.append(lap_data)
-        # Send this lap to the backend - including lap number
-        self.data_uploader.dispatch_lap(lap_data)
-
     def add_lap_data(self, index, data):
         for k, v in data.items():
             if k in self.lap_data_points:
@@ -267,10 +240,6 @@ class LapController:
     def set_pit_lap(self):
         # log("Pit Lap {}".format(self.lap_count))
         self.pit_lap = True
-
-    def toggle_log(self, value):
-        self.is_logging = value
-        log("[controller] Logging: {}".format(self.is_logging))
     
     def toggle_upload(self, value):
         self.is_uploading = value
