@@ -2,13 +2,14 @@ import sys
 import os
 import threading
 import time
+
  # Load the required external libs
 sys.path.append("apps/python/pData/deps/stdlib64")
 sys.path.append("apps/python/pData/deps")
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 import ac
-from LapController import TELEMETRY_POINTS, LapController, SESSION_LUT
+from SessionController import SessionController, TELEMETRY_POINTS, SESSION_LUT
 from DataUploader import stop_worker
 import acsys
 import math
@@ -22,18 +23,18 @@ lap_number=1
 last_meter = None
 lap_data = None
 invalid_lap_display = None
-lapController = None
+session_controller = None
 
 # Midpoint-nearest sampling state
 best_meter_delta = None  # best (smallest) delta-from-midpoint seen for the current meter
 
 
 def toggle_check(checkbox, value):
-    global lapController
+    global session_controller
     if checkbox == "Upload to Cloud":
-        lapController.toggle_upload(value)
+        session_controller.toggle_upload(value)
     if checkbox == "Upload track data":
-        lapController.toggle_track_upload(value)
+        session_controller.toggle_track_upload(value)
 
 
 def init_app(app_label):
@@ -74,23 +75,23 @@ def acUpdate(deltaT):
     global last_meter
     global track_length
     global lap_number, lap_data
-    global lapController
+    global session_controller
     global session_id
     global invalid_lap_display
     global best_meter_delta
 
     # Skip update if app wasn't initialized (e.g., in replay mode)
-    if lapController is None:
+    if session_controller is None:
         if info.graphics.status == 2:
             initReportingApps()
         else:
             return
 
     current_s_id = info.graphics.session
-    if current_s_id != lapController.session_id: 
-        log("[ac] Ending session {}".format(lapController.get_session()))
+    if current_s_id != session_controller.session_id: 
+        log("[ac] Ending session {}".format(session_controller.get_session()))
         log("[ac] Starting session {}".format(current_s_id))
-        lapController.start_session(current_s_id)
+        session_controller.start_session(current_s_id)
     track_distance = round(ac.getCarState(0, acsys.CS.NormalizedSplinePosition) * track_length, 2)
     track_meter = math.floor(track_distance)
     meter_delta = abs((track_distance - track_meter) - 0.5)  # absolute distance from midpoint
@@ -109,15 +110,15 @@ def acUpdate(deltaT):
 
         # Lap detection
         lap = ac.getCarState(0, acsys.CS.LapCount) + 1
-        if lap != lapController.current_lap:
+        if lap != session_controller.current_lap:
             if invalid_lap_display:
                 invalid_lap_display.clear()
             if lap == 0:
-                ac.log("[ac] Ending Session {} - LAP DETECTION".format(lapController.get_session()))
-                lapController.start_session(current_s_id)
+                ac.log("[ac] Ending Session {} - LAP DETECTION".format(session_controller.get_session()))
+                session_controller.start_session(current_s_id)
             else:
                 last_time = ac.getCarState(0, acsys.CS.LastLap)
-                lapController.start_lap(lap, lap_time=last_time)
+                session_controller.start_lap(lap, lap_time=last_time)
     
     # Read telemetry when we are sure we'll use it
     tyres_out = info.physics.numberOfTyresOut
@@ -134,7 +135,7 @@ def acUpdate(deltaT):
     pos = [round(raw_pos[0],1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
     ers = round(info.physics.kersCurrentKJ, 2)
 
-    lapController.add_lap_data(track_meter - 1, {  # -1: tracks start at 1m
+    session_controller.add_lap_data(track_meter - 1, {  # -1: tracks start at 1m
         TELEMETRY_POINTS.lapTime: lap_time,
         TELEMETRY_POINTS.speed: speed,
         TELEMETRY_POINTS.gas: gas,
@@ -151,16 +152,16 @@ def acUpdate(deltaT):
 
     if invalid:
         # Mark lap invalid and update the display
-        lapController.invalidate_lap()
-        invalid_lap_display.show(lapController.current_lap)
+        session_controller.invalidate_lap()
+        invalid_lap_display.show(session_controller.current_lap)
 
     # Update pit state display (shows/hides pit message)
-    invalid_lap_display.set_pit(lapController.current_lap, pit)
-    if pit: lapController.set_pit_lap()
+    invalid_lap_display.set_pit(session_controller.current_lap, pit)
+    if pit: session_controller.set_pit_lap()
 
 def acShutdown():
-    global lapController
-    lapController.end_event()
+    global session_controller
+    session_controller.end_event()
     stop_worker()
     log("[ac] Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
@@ -171,8 +172,7 @@ def acShutdown():
 
 
 def initReportingApps():
-    """Init the lapController"""
-    global track_length, lapController, invalid_lap_display
+    global track_length, session_controller, invalid_lap_display
 
     circuit = ac.getTrackName(0)
     track_length = ac.getTrackLength(0)
@@ -181,7 +181,7 @@ def initReportingApps():
 
     session_type = info.graphics.session
     driver = ac.getDriverName(0)
-    lapController = LapController(session_type, circuit, track, round(track_length), car_name, driver)
+    session_controller = SessionController(session_type, circuit, track, round(track_length), car_name, driver)
     log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
     app = init_app('pData')
 

@@ -29,7 +29,7 @@ class TELEMETRY_POINTS:
     posZ = 'posZ'
     ers = 'ers'
 
-class LapController:
+class SessionController:
 
     def __init__(
         self,
