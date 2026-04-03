@@ -60,7 +60,7 @@ class SessionController:
         self._reset_data_points()
 
         self.is_logging = False
-        self.is_uploading = False
+        self.is_uploading = True
         self.is_uploading_track = False
         log('controller initing')
         self.track_data_controller = TrackDataController(circuit_name, track_name)

@@ -33,8 +33,9 @@ def stop_worker():
 
 
 class TrackDataUploader:
-    def __init__(self, track_id):
+    def __init__(self, track_id, check_callback=None):
         self.track_id = track_id
+        self.check_callback = check_callback
         self.dispatch_track_check()
 
     def dispatch_track_check(self):
@@ -49,6 +50,8 @@ class TrackDataUploader:
         log('[trackUploader] sending track check {}'.format(self.track_id))
         response_data = send_track_check({'trackId': self.track_id})
         log('[trackUploader] received track check: {}'.format(response_data))
+        if self.check_callback:
+            self.check_callback(response_data)
     
     def _send_track_data(self, track_data: dict):
         log('[trackUploader] sending track data {}: {}'.format(track_data['trackId'], track_data.keys()))

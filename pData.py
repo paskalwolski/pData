@@ -29,33 +29,6 @@ session_controller = None
 best_meter_delta = None  # best (smallest) delta-from-midpoint seen for the current meter
 
 
-def toggle_check(checkbox, value):
-    global session_controller
-    if checkbox == "Upload to Cloud":
-        session_controller.toggle_upload(value)
-    if checkbox == "Upload track data":
-        session_controller.toggle_track_upload(value)
-
-
-def init_app(app_label):
-    app = ac.newApp(app_label)
-    ac.setTitle(app, 'pData Logging Config')
-    ac.setSize(app, 180, 100)
-    ac.setIconPosition(app, -100, -100)
-
-    cb_upload = ac.addCheckBox(app, "Upload to Cloud")
-    ac.setSize(cb_upload, 18, 18)
-    ac.setPosition(cb_upload, 10, 55)
-    ac.addOnCheckBoxChanged(cb_upload, toggle_check)
-    ac.setValue(cb_upload, 1)
-    toggle_check("Upload to Cloud", 1) # Simulate a value change to trigger the listener
-
-    cb_track = ac.addCheckBox(app, "Upload track data")
-    ac.setSize(cb_track, 18, 18)
-    ac.setPosition(cb_track, 10, 75)
-    ac.addOnCheckBoxChanged(cb_track, toggle_check)
-    ac.setValue(cb_track, 0)
-    toggle_check("Upload track data", 0) # Simulate a value change to trigger the listener
 
 def acMain(ac_version):
     
@@ -183,7 +156,7 @@ def initReportingApps():
     driver = ac.getDriverName(0)
     session_controller = SessionController(session_type, circuit, track, round(track_length), car_name, driver)
     log(str(SESSION_LUT[session_type][1] +": "+circuit+ "-{} ({}m) in " + car_name).format(track, track_length))
-    app = init_app('pData')
+    ac.newApp('pData')
 
     # Initialize data displays (they create their own app windows)
     invalid_lap_display = InvalidLapDisplay()
