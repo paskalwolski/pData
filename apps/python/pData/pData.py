@@ -9,12 +9,12 @@ sys.path.append("apps/python/pData/deps")
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 import ac
-from apps.python.pData.SessionController import SessionController, TELEMETRY_POINTS, SESSION_LUT
-from apps.python.pData.DataUploader import stop_worker
+from SessionController import SessionController, TELEMETRY_POINTS, SESSION_LUT
+from DataUploader import stop_worker
 import acsys
 import math
 from sim_info import info
-from apps.python.pData.plogging import log
+from plogging import log
 from data_displays import InvalidLapDisplay
 
 outfile = None

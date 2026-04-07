@@ -2,7 +2,7 @@ import json
 import requests
 import ac
 
-from apps.python.pData.plogging import log
+from .plogging import log
 
 headers = {
     "Content-Type": "application/json"

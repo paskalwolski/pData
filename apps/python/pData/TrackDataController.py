@@ -4,8 +4,8 @@ import json
 import os
 
 import ac
-from apps.python.pData.DataUploader import TrackDataUploader
-from apps.python.pData.plogging import log
+from DataUploader import TrackDataUploader
+from plogging import log
 
 
 class TrackDataController:

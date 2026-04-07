@@ -3,8 +3,8 @@ import queue
 import traceback
 
 import ac
-from apps.python.pData.plogging import log
-from apps.python.pData.ext_requests import handle_lap, send_track_check, close_session, send_track_data
+from .plogging import log
+from .ext_requests import handle_lap, send_track_check, close_session, send_track_data
 
 _task_queue = queue.Queue()
 
