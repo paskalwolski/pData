@@ -1,4 +1,5 @@
 from datetime import datetime
+import json
 
 # pylint: disable=line-too-long,R0902,R0913
 # pylint: disable=R0913
@@ -6,6 +7,19 @@ from datetime import datetime
 
 # Telemetry: Static bundle containing the telemtry data for a single meter
 class Telemetry:
+    _json_field_names = {
+        "d": "d",
+        "speed": "speed",
+        "gas": "gas",
+        "brake": "brake",
+        "gear": "gear",
+        "steer": "steer",
+        "rpm": "rpm",
+        "pos_x": "posX",
+        "pos_z": "posZ",
+        "ers": "ers",
+    }
+
     def __init__(self, *, d, speed, gas, brake, gear, steer, rpm, pos_x, pos_z, ers):
         # type: (Telemetry, int, float, float, float, int, float, float, float, float, float) -> None
         self.d = d
@@ -19,13 +33,23 @@ class Telemetry:
         self.pos_z = pos_z
         self.ers = ers
 
+    @staticmethod
+    def get_telemetry_object(telemetry):
+        # type: (list[Telemetry | None]) -> dict
+        """
+        Prepare a json-friendly dict to store separate telemetry arrays
+        """
+        telemetry_object = {j: [] for j in Telemetry._json_field_names.values()}
+        for t in telemetry:
+            for f, j in Telemetry._json_field_names.items():
+                telemetry_object[j].append(getattr(t, f, None) if t else None)
+        return telemetry_object
+
 
 class SessionData:
     def __init__(self, event_data, session, session_timestamp):
         # type: (EventData, str, datetime) -> None
-        self.driver = event_data.driver
-        self.track = event_data.track
-        self.car = event_data.car
+        self.event_data = event_data
         self.session = session
         self.session_timestamp = session_timestamp
 
@@ -46,8 +70,9 @@ class UpdatePayload:
 
 
 class EventData:
-    def __init__(self, driver, track, car):
-        # type: (str, str, str) -> None
+    def __init__(self, driver, track, car, track_length):
+        # type: (str, str, str, int) -> None
         self.driver = driver
         self.track = track
+        self.track_length = track_length
         self.car = car

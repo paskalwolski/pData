@@ -31,6 +31,7 @@ class LapController:
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
         else:
+            telemetry_payload = self._prepare_telemetry_data()  # pylint: disable=W0612
             # TODO: Post the lap
             log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
 
@@ -52,10 +53,14 @@ class LapController:
                 ),
             )
 
-    # TODO: Complete json prep and send
     def _prepare_telemetry_data(self):
+        # type: () -> dict
         # Adjust the telemetry for last meter value
-        shifted_telemetry = (  # pylint: disable=W0612
+        shifted_telemetry = (
             self.lap_telemetry[self.last_stored_meter :]
             + self.lap_telemetry[: self.last_stored_meter]
         )
+        telemetry_object = Telemetry.get_telemetry_object(  # pylint: disable=W0612
+            shifted_telemetry
+        )
+        return telemetry_object
