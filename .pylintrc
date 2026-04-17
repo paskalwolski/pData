@@ -24,6 +24,9 @@ disable =
     # Common in AC app pattern — module-level state is intentional
     global-statement,
     global-variable-not-assigned,
+    
+    # Too few methods - for Exception classes
+    R0903
 
 [REPORTS]
 output-format = text

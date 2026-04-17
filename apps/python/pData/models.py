@@ -1,5 +1,7 @@
-from collections import namedtuple
 from datetime import datetime
+
+# pylint: disable=line-too-long,R0902,R0913
+# pylint: disable=R0913
 
 
 # Telemetry: Static bundle containing the telemtry data for a single meter
@@ -19,12 +21,13 @@ class Telemetry:
 
 
 class SessionData:
-    def __init__(self, event_data, session, session_time):
+    def __init__(self, event_data, session, session_timestamp):
         # type: (EventData, str, datetime) -> None
         self.driver = event_data.driver
         self.track = event_data.track
         self.car = event_data.car
         self.session = session
+        self.session_timestamp = session_timestamp
 
 
 class LapData:
@@ -40,7 +43,6 @@ class UpdatePayload:
         # type: (UpdatePayload, str, LapData) -> None
         self.session = session
         self.lap_data = lap_data
-        pass
 
 
 class EventData:
