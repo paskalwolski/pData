@@ -37,5 +37,7 @@ class SessionController:
 
     def register_lap(self, lap_id):
         # type: (str) -> None
-        """Callback used when closing a lap - this allows the session to keep track of how many laps were live"""
+        """Callback used when closing a lap
+        this allows the session to keep track of how many laps were live
+        """
         self.laps.append(lap_id)

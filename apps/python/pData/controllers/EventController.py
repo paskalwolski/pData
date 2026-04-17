@@ -8,7 +8,10 @@ log = pLogger(__name__).log
 
 
 class EventController:
-    """Singleton class for the current AC Game Instance. Recreated only when the game is restarted"""
+    """
+    Singleton class for the current AC Game Instance.
+    Recreated only when the game is restarted
+    """
 
     def __init__(self, event_data):
         # type: (EventData) -> None

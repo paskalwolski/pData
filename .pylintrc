@@ -1,0 +1,30 @@
+[MAIN]
+py-version = 3.3
+
+[MESSAGES CONTROL]
+disable =
+    # Docstrings — not used in this project
+    missing-module-docstring,
+    missing-class-docstring,
+    missing-function-docstring,
+
+    # FIXMEs / TODOs — tracked in code intentionally
+    fixme,
+
+    # AC built-in modules unavailable to pylint
+    import-error,
+
+    # AC app functions (acMain, acUpdate, acShutdown) don't fit standard naming
+    invalid-name,
+
+    # Logging uses plogging.log(), not stdlib logging
+    logging-not-lazy,
+    logging-fstring-interpolation,
+
+    # Common in AC app pattern — module-level state is intentional
+    global-statement,
+    global-variable-not-assigned,
+
+[REPORTS]
+output-format = text
+score = no
