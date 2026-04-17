@@ -1,4 +1,4 @@
-from exceptions import InvalidBundle, LapBoundaryExceeded
+from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
 from plogging import pLogger
 
 from models import UpdatePayload, SessionData
@@ -13,7 +13,6 @@ class LapController:
         self.lap_number = lap_number
         self.lap_data = []
         log("Lap {} Ready".format(lap_number))
-        return
 
     def update(self, payload):
         # type: (UpdatePayload) -> None | int
@@ -21,15 +20,22 @@ class LapController:
         if not lap:
             raise InvalidBundle()
         if lap != self.lap_number:
-            # Mark the last meter of the lap - as this might not correspond to track_length
+            if lap == 1:
+                # Reset lap count implies a new session
+                # TODO: Handle the case where current_lap == new_lap == 1 (restart on lap 1)
+                raise SessionBoundaryExceeded(reason="Lap Count Reset")
+
+            # Next lap started
             raise LapBoundaryExceeded(
                 reason="Lap Number {} does not match expected {}".format(
                     lap, self.lap_number
                 ),
             )
 
-    def close(self, last_lap_time):
+    def close(self, last_lap_time=None):
         # type: (float | None) -> None
         if not last_lap_time:
-            log("No lap time provided - discarding lap {}".format(self.lap_number))
-        # TODO: Post the lap
+            log("Discarded lap {} - No Lap Time".format(self.lap_number))
+        else:
+            log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
+            # TODO: Post the lap

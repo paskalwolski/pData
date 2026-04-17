@@ -1,4 +1,4 @@
-from exceptions import InvalidBundle, SessionBoundaryExceeded
+from exceptions import SessionBoundaryExceeded
 from controllers.SessionController import SessionController
 from plogging import pLogger
 
@@ -16,6 +16,7 @@ class EventController:
     def __init__(self, event_data):
         # type: (EventData) -> None
         self.event_data = event_data
+        self.session = None  # type: SessionController | None
         # TODO: Get track_id from TrackDataController so it's consistent
         log("Event Controller Ready")
 
@@ -23,19 +24,19 @@ class EventController:
         # type: (UpdatePayload) -> None
         """Take a full game tick bundle, and direct it towards the appropriate session"""
 
-        session = payload.session
-        if not session:
-            raise InvalidBundle("No 'session_type' found")
+        if not self.session:
+            # Create a new session with the provided data
+            self.session = SessionController(self.event_data, payload.session)
 
         try:
-            self.session_controller.update(payload)
+            self.session.update(payload)
         except SessionBoundaryExceeded:
             # Old session can't handle the tick - close it, create a new one, and try the tick again
-            self.session_controller.close()
-            self.session_controller = SessionController(self.event_data, session)
-            self.session_controller.update(payload)
+            self.session.close()
+            self.session = SessionController(self.event_data, payload.session)
+            self.session.update(payload)
 
     def close(self):
-        self.session_controller.close()
-        log("Closing Event")
-        return
+        if self.session:
+            self.session.close()
+        log("Closed Event")
