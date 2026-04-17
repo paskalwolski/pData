@@ -27,6 +27,7 @@ class SessionController:
 
     def close(self):
         log("Closing Session {}".format(self.session_type))
+        # TODO: Check if we have valid laps, and decide to post the session
         return
     
     def register_lap(self, lap_id):

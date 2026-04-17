@@ -4,5 +4,8 @@ class BoundaryExceeded(BaseException):
 class SessionBoundaryExceeded(BoundaryExceeded):
     pass    
 
+class LapBoundaryExceeded(BoundaryExceeded):
+    pass    
+
 class InvalidBundle(ValueError):
     pass
