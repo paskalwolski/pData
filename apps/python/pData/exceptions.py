@@ -1,15 +1,17 @@
 class BoundaryExceeded(BaseException):
-    def __init__(self, reason, *args):
-        # type: (str, object) -> None
+    def __init__(self, reason=None, *args):
+        # type: (str | None, object) -> None
         self.reason = reason
         super().__init__(*args)
-    pass
+
 
 class SessionBoundaryExceeded(BoundaryExceeded):
-    pass    
+    pass
+
 
 class LapBoundaryExceeded(BoundaryExceeded):
-    pass    
+    pass
+
 
 class InvalidBundle(ValueError):
     pass
