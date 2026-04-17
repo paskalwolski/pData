@@ -1,44 +1,41 @@
 from datetime import datetime
 
+from controllers.LapController import LapController
+from models import EventData, SessionData, UpdatePayload
 from plogging import pLogger
-from exceptions import SessionBoundaryExceeded
+from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 
 log = pLogger(__name__).log
 
 
 class SessionController:
     def __init__(self, event_data, session_type):
-        # type: (dict, str) -> None
-        self.session_type = session_type
-        self.session_data = SessionController.get_session_data(session_type, event_data)
-        self.session_timestamp = datetime.now(datetime.UTC)
+        # type: (EventData, str) -> None
+        self.session_data = SessionData(event_data, session_type, datetime.utcnow())
         self.laps = []
         log("Session Ready")
 
-    def handle_tick(self, payload):
-        # type: (dict) -> None
-        session_type = payload.pop("session_type")
-        if session_type != self.session_type:
+    def update(self, payload):
+        # type: (UpdatePayload) -> None
+        session = payload.session
+        if session != self.session_data.session:
             raise SessionBoundaryExceeded()
 
         # TODO: Interact with LapController
-        # self.lap_controller.handle_tick(payload)
-    
+        try:
+            self.lap_controller.update(payload)
+        except LapBoundaryExceeded:
+            last_lap_time = payload.lap_data.last_lap_time
+            self.lap_controller.close(last_lap_time)
+            lap_number = payload.lap_data.lap_number
+            self.lap_controller = LapController(self.session_data, lap_number)
 
     def close(self):
-        log("Closing Session {}".format(self.session_type))
+        log("Closing Session {}".format(self.session_data.session))
         # TODO: Check if we have valid laps, and decide to post the session
         return
-    
+
     def register_lap(self, lap_id):
         # type: (str) -> None
         """Callback used when closing a lap - this allows the session to keep track of how many laps were live"""
         self.laps.append(lap_id)
-    
-    @staticmethod
-    def get_session_data(session_type, event_data):
-        # type: (str, dict) -> dict
-        _data_fields = ('driver', 'car', 'track')
-        session_data = {k: event_data.get(k, None) for k in _data_fields}
-        session_data['sessionType'] = session_type
-        return session_data
