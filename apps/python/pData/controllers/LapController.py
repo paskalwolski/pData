@@ -1,7 +1,7 @@
 from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
 from plogging import pLogger
 
-from models import UpdatePayload, SessionData
+from models import Telemetry, UpdatePayload, SessionData
 
 log = pLogger(__name__).log
 
@@ -11,11 +11,31 @@ class LapController:
         # type: (SessionData, int) -> None
         self.session_data = session_data
         self.lap_number = lap_number
-        self.lap_data = []
+        self.lap_telemetry = [
+            None for _ in range(session_data.event_data.track_length)
+        ]  # type: list[None | Telemetry]
+        self.last_stored_meter = 0
         log("Lap {} Ready".format(lap_number))
 
     def update(self, payload):
-        # type: (UpdatePayload) -> None | int
+        # type: (UpdatePayload) -> None
+        self._check_lap_boundary(payload)
+
+        # Track this telemetry point
+        telemetry = payload.lap_data.telemetry
+        self.last_stored_meter = telemetry.d
+        self.lap_telemetry[telemetry.d] = telemetry
+
+    def close(self, last_lap_time=None):
+        # type: (float | None) -> None
+        if not last_lap_time:
+            log("Discarded lap {} - No Lap Time".format(self.lap_number))
+        else:
+            # TODO: Post the lap
+            log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
+
+    def _check_lap_boundary(self, payload):
+        # type: (UpdatePayload) -> None
         lap = payload.lap_data.lap_number
         if not lap:
             raise InvalidBundle()
@@ -32,10 +52,10 @@ class LapController:
                 ),
             )
 
-    def close(self, last_lap_time=None):
-        # type: (float | None) -> None
-        if not last_lap_time:
-            log("Discarded lap {} - No Lap Time".format(self.lap_number))
-        else:
-            log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
-            # TODO: Post the lap
+    # TODO: Complete json prep and send
+    def _prepare_telemetry_data(self):
+        # Adjust the telemetry for last meter value
+        shifted_telemetry = (  # pylint: disable=W0612
+            self.lap_telemetry[self.last_stored_meter :]
+            + self.lap_telemetry[: self.last_stored_meter]
+        )
