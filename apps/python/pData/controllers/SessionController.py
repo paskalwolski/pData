@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from controllers.LapController import LapController
+from controllers import LapController
 from models import EventData, SessionData, UpdatePayload
 from plogging import pLogger
 from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded

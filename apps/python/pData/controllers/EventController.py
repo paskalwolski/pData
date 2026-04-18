@@ -1,5 +1,5 @@
 from exceptions import SessionBoundaryExceeded
-from controllers.SessionController import SessionController
+from controllers import SessionController
 from plogging import pLogger
 
 from models import EventData, UpdatePayload
