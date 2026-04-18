@@ -1,5 +1,4 @@
 from datetime import datetime
-import json
 
 # pylint: disable=line-too-long,R0902,R0913
 # pylint: disable=R0913

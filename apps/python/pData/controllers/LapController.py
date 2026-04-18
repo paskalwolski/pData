@@ -31,6 +31,7 @@ class LapController:
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
         else:
+            # TODO: Async all this processing so we do not block main thread
             telemetry_payload = self._prepare_telemetry_data()  # pylint: disable=W0612
             # TODO: Post the lap
             log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
