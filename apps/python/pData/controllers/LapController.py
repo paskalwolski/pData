@@ -1,6 +1,8 @@
 from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
 from plogging import pLogger
 
+from worker import worker
+
 from models import Telemetry, UpdatePayload, SessionData
 
 log = pLogger(__name__).log
@@ -30,11 +32,16 @@ class LapController:
         # type: (float | None) -> None
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
-        else:
-            # TODO: Async all this processing so we do not block main thread
-            telemetry_payload = self._prepare_telemetry_data()  # pylint: disable=W0612
-            # TODO: Post the lap
-            log("Closed Lap {}: {}".format(self.lap_number, last_lap_time))
+            return
+        worker.enqueue(lambda: self._process(last_lap_time))
+        log("Fired Lap {}: {}".format(self.lap_number, last_lap_time))
+
+    def _process(self, last_lap_time):
+        # type: (float) -> None
+        telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
+        # TODO: Send network request, capture response
+        # TODO: Register response with SessionController
+        log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
     def _check_lap_boundary(self, payload):
         # type: (UpdatePayload) -> None
