@@ -53,17 +53,20 @@ class SessionData:
         self.session_timestamp = session_timestamp
 
 
-class LapData:
-    def __init__(self, *, lap_number, telemetry, last_lap_time=None):
-        # type: (LapData, int, Telemetry, float | None) -> None
+class LapPayload:
+    def __init__(self, *, lap_number, telemetry, invalid, in_pit, last_lap_time=None):
+        # type: (LapPayload, int, Telemetry, bool, bool, float | None) -> None
         self.lap_number = lap_number
         self.telemetry = telemetry
+
+        self.invalid = invalid
+        self.in_pit = in_pit
         self.last_lap_time = last_lap_time
 
 
 class UpdatePayload:
     def __init__(self, session, lap_data):
-        # type: (UpdatePayload, str, LapData) -> None
+        # type: (UpdatePayload, str, LapPayload) -> None
         self.session = session
         self.lap_data = lap_data
 
