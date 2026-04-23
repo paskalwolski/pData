@@ -1,11 +1,12 @@
 from datetime import datetime
 
+from worker import worker
 from controllers import LapController
 from models import EventData, SessionData, UpdatePayload
 from plogging import pLogger
 from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 
-log = pLogger(__name__).log
+logger = pLogger(__name__)
 
 
 class SessionController:
@@ -17,7 +18,7 @@ class SessionController:
         self.remote_session_id = None
         self.laps = []  # type: list[str]
         self.lap = None  # type: LapController | None
-        log("Session Ready")
+        logger.log("Session Ready")
 
     def update(self, payload):
         # type: (UpdatePayload) -> None

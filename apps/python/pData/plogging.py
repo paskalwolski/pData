@@ -13,3 +13,8 @@ class pLogger:
 
     def log(self, *args):
         ac.log("[pData | {}] | {}".format(self.module, " | ".join(list(args))))
+
+    def worker_log(self, *args):
+        self.log(
+            "[pData | worker | {}] | {}".format(self.module, " | ".join(list(args)))
+        )
