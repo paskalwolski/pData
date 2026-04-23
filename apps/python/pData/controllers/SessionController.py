@@ -42,16 +42,8 @@ class SessionController:
         # TODO: Check if we have valid laps, and decide to post the session
         if self.lap:
             self.lap.close()
-        if self.remote_session_id:
-            log(
-                "Closed {} Session {} with {} laps: [{}]".format(
-                    self.session,
-                    self.remote_session_id,
-                    len(self.laps),
-                    ",".join(self.laps),
-                )
-            )
-        log("Closed {} Session".format(self.session))
+        worker.enqueue(self._close_process)
+        logger.log("Fired Close {} Session".format(self.session))
 
     def register_lap(self, lap_id, session_id):
         # type: (str, str | None) -> None
@@ -65,3 +57,14 @@ class SessionController:
     @property
     def session_data(self):
         return SessionData(self.event_data, self.session, self.session_timestamp)
+
+    def _close_process(self):
+        # type: () -> None
+        """
+        Relies on the lap close being ahead of this in the queue
+        so the lap will be registered and taken into account
+        """
+        if self.remote_session_id:
+            logger.worker_log(
+                "Closing Remote Session {}".format(self.remote_session_id)
+            )

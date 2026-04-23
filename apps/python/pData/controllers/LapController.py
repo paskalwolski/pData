@@ -42,10 +42,10 @@ class LapController:
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
             return
-        worker.enqueue(lambda: self._process(last_lap_time))
-        log("Fired Lap {}: {}".format(self.lap_number, last_lap_time))
+        worker.enqueue(lambda: self._close_process(last_lap_time))
+        log("Fired Close Lap {}: {}".format(self.lap_number, last_lap_time))
 
-    def _process(self, last_lap_time):
+    def _close_process(self, last_lap_time):
         # type: (float) -> None
         telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
         lap_data = {
