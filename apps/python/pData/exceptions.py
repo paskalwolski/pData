@@ -19,3 +19,7 @@ class LapBoundaryExceeded(BoundaryExceeded):
 
 class InvalidBundle(ValueError):
     pass
+
+
+class APIException(BaseException):
+    pass

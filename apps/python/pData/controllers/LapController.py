@@ -1,9 +1,10 @@
-from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
 from plogging import pLogger
-
-from worker import worker
-
 from models import Telemetry, UpdatePayload, SessionData
+from worker import worker
+from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
+
+from apps.python.pData import api_client
+
 
 log = pLogger(__name__).log
 
@@ -39,7 +40,15 @@ class LapController:
     def _process(self, last_lap_time):
         # type: (float) -> None
         telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
-        # TODO: Send network request, capture response
+        lap_data = {
+            "lapNumber": self.lap_number,
+            "lapTime": last_lap_time,
+            # TODO: Fix valid and pit values
+            "isValid": True,
+            "isPit": True,
+            "lapData": telemetry_object,
+        }
+        self._post_lap(lap_data)
         # TODO: Register response with SessionController
         log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
@@ -72,3 +81,7 @@ class LapController:
             shifted_telemetry
         )
         return telemetry_object
+
+    def _post_lap(self, lap_payload):
+        # type: (dict) -> None
+        lap_id, session_id = api_client.post_lap(lap_payload)
