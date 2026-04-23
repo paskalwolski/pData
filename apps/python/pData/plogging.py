@@ -12,6 +12,4 @@ class pLogger:
         self.module = module_name
 
     def log(self, *args):
-        ac.log(
-            "[pData | {}] | {}".format(self.module, " | ".join([arg for arg in args]))
-        )
+        ac.log("[pData | {}] | {}".format(self.module, " | ".join(list(args))))
