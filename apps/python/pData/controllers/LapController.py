@@ -61,7 +61,6 @@ class LapController:
         except APIException as e:
             log("Failed Lap Upload", traceback.format_exception(e))
             return
-        # TODO: Register response with SessionController
         self.register_lap_with_session(lap_id, session_id)
         log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
