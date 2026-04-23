@@ -1,7 +1,14 @@
+import traceback
+
 from plogging import pLogger
 from models import Telemetry, UpdatePayload, SessionData
 from worker import worker
-from exceptions import InvalidBundle, LapBoundaryExceeded, SessionBoundaryExceeded
+from exceptions import (
+    APIException,
+    InvalidBundle,
+    LapBoundaryExceeded,
+    SessionBoundaryExceeded,
+)
 
 from apps.python.pData import api_client
 
@@ -10,13 +17,14 @@ log = pLogger(__name__).log
 
 
 class LapController:
-    def __init__(self, session_data, lap_number):
-        # type: (SessionData, int) -> None
+    def __init__(self, session_data, lap_number, register_lap_callback):
+        # type: (SessionData, int, callable) -> None  # type: ignore
         self.session_data = session_data
         self.lap_number = lap_number
         self.lap_telemetry = [
             None for _ in range(session_data.event_data.track_length)
         ]  # type: list[None | Telemetry]
+        self.register_lap_with_session = register_lap_callback
         self.last_stored_meter = 0
         log("Lap {} Ready".format(lap_number))
 
@@ -48,8 +56,13 @@ class LapController:
             "isPit": True,
             "lapData": telemetry_object,
         }
-        self._post_lap(lap_data)
+        try:
+            lap_id, session_id = api_client.post_lap(lap_data)
+        except APIException as e:
+            log("Failed Lap Upload", traceback.format_exception(e))
+            return
         # TODO: Register response with SessionController
+        self.register_lap_with_session(lap_id, session_id)
         log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
     def _check_lap_boundary(self, payload):
@@ -81,7 +94,3 @@ class LapController:
             shifted_telemetry
         )
         return telemetry_object
-
-    def _post_lap(self, lap_payload):
-        # type: (dict) -> None
-        lap_id, session_id = api_client.post_lap(lap_payload)

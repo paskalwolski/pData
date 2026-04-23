@@ -14,6 +14,7 @@ class SessionController:
         self.event_data = event_data
         self.session = session_type
         self.session_timestamp = datetime.utcnow()
+        self.remote_session_id = None
         self.laps = []  # type: list[str]
         self.lap = None  # type: LapController | None
         log("Session Ready")
@@ -21,7 +22,9 @@ class SessionController:
     def update(self, payload):
         # type: (UpdatePayload) -> None
         if not self.lap:
-            self.lap = LapController(self.session_data, payload.lap_data.lap_number)
+            self.lap = LapController(
+                self.session_data, payload.lap_data.lap_number, self.register_lap
+            )
 
         # Check session boundary
         if payload.session != self.session:
@@ -33,19 +36,30 @@ class SessionController:
             last_lap_time = payload.lap_data.last_lap_time
             self.lap.close(last_lap_time)
             lap_number = payload.lap_data.lap_number
-            self.lap = LapController(self.session_data, lap_number)
+            self.lap = LapController(self.session_data, lap_number, self.register_lap)
 
     def close(self):
         # TODO: Check if we have valid laps, and decide to post the session
         if self.lap:
             self.lap.close()
-        log("Closed Session {}".format(self.session))
+        if self.remote_session_id:
+            log(
+                "Closed {} Session {} with {} laps: [{}]".format(
+                    self.session,
+                    self.remote_session_id,
+                    len(self.laps),
+                    ",".join(self.laps),
+                )
+            )
+        log("Closed {} Session".format(self.session))
 
-    def register_lap(self, lap_id):
-        # type: (str) -> None
+    def register_lap(self, lap_id, session_id):
+        # type: (str, str | None) -> None
         """Callback used when closing a lap
         this allows the session to keep track of how many laps were live
         """
+        if not self.remote_session_id and session_id:
+            self.remote_session_id = session_id
         self.laps.append(lap_id)
 
     @property
