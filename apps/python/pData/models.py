@@ -46,11 +46,12 @@ class Telemetry:
 
 
 class SessionData:
-    def __init__(self, event_data, session, session_timestamp):
-        # type: (EventData, str, datetime) -> None
+    def __init__(self, event_data, session, session_timestamp, remote_session_id):
+        # type: (EventData, str, datetime, str | None) -> None
         self.event_data = event_data
         self.session = session
         self.session_timestamp = session_timestamp
+        self.remote_session_id = remote_session_id
 
 
 class LapPayload:

@@ -6,6 +6,8 @@ from models import EventData, SessionData, UpdatePayload
 from plogging import pLogger
 from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 
+from apps.python.pData import api_client
+
 logger = pLogger(__name__)
 
 
@@ -57,7 +59,12 @@ class SessionController:
 
     @property
     def session_data(self):
-        return SessionData(self.event_data, self.session, self.session_timestamp)
+        return SessionData(
+            self.event_data,
+            self.session,
+            self.session_timestamp,
+            self.remote_session_id,
+        )
 
     def _close_process(self):
         # type: () -> None
@@ -65,7 +72,12 @@ class SessionController:
         Relies on the lap close being ahead of this in the queue
         so the lap will be registered and taken into account
         """
-        if self.remote_session_id:
-            logger.worker_log(
-                "Closing Remote Session {}".format(self.remote_session_id)
+        if not self.remote_session_id:
+            logger.worker_log("No remote session to close")
+            return
+        logger.worker_log(
+            "Closing Remote Session {}: {} laps".format(
+                self.remote_session_id, len(self.laps)
             )
+        )
+        api_client.close_session({"sessionId": self.remote_session_id})

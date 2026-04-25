@@ -6,6 +6,7 @@ from requests import HTTPError, Response
 from exceptions import APIException
 
 LAP_POST_URL = ""
+SESSION_CLOSE_URL = ""
 
 HEADERS = {"Content-Type": "application/json"}
 
@@ -30,6 +31,13 @@ def post_lap(lap_payload):
 
 def init_lap_handler():
     pass
+
+
+def close_session(session_payload):
+    # type: (dict) -> bool
+    data = json.dumps(session_payload)
+    res = _post(SESSION_CLOSE_URL, data)
+    return res.ok
 
 
 def _post(url, data):
