@@ -103,7 +103,7 @@ class LapController:
             self.lap_telemetry[self.last_stored_meter :]
             + self.lap_telemetry[: self.last_stored_meter]
         )
-        telemetry_object = Telemetry.get_telemetry_object(  # pylint: disable=W0612
+        telemetry_object = Telemetry.serialise_telemetry_object(  # pylint: disable=W0612
             shifted_telemetry
         )
         return telemetry_object

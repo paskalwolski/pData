@@ -33,10 +33,14 @@ class Telemetry:
         self.ers = ers
 
     @staticmethod
-    def get_telemetry_object(telemetry):
+    def serialise_telemetry_object(telemetry):
         # type: (list[Telemetry | None]) -> dict
         """
-        Prepare a json-friendly dict to store separate telemetry arrays
+        Prepare a json-friendly dict to store separate telemetry arrays.  
+        
+        This splits the stored array-of-objects into an object of arrays 
+        reducing outgoing bundle size and allowing data to be directly
+        stored in DB without further processing
         """
         telemetry_object = {j: [] for j in Telemetry._json_field_names.values()}
         for t in telemetry:
