@@ -20,6 +20,7 @@ class SessionController:
         self.remote_session_id = None
         self.laps = []  # type: list[str]
         self.lap = None  # type: LapController | None
+        worker.enqueue(self._open_process)
         logger.log("Session Ready")
 
     def update(self, payload):
@@ -80,3 +81,7 @@ class SessionController:
                 self.remote_session_id, len(self.laps)
             )
         )
+
+    def _open_process(self):
+        api_client.init_lap_handler()
+        logger.worker_log("Succeeded opening lap handler")

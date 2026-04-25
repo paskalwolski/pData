@@ -36,7 +36,13 @@ def post_lap(lap_data_request):
 
 
 def init_lap_handler():
-    pass
+    """
+    Empty request to the lap handler to help with spinup and
+    opening connection - as this may cause stutters mid-session
+    """
+    res = _post(LAP_POST_URL, None)
+    if not res.status_code == 202:
+        raise APIException("Error opening connection to Lap Handler")
 
 
 def close_session(session_payload):
@@ -51,7 +57,7 @@ def close_session(session_payload):
 
 
 def _post(url, data):
-    # type: (str, str) -> Response
+    # type: (str, str | None) -> Response
     for attempt in range(2):
         try:
             r = requests.post(url, data=data, headers=HEADERS)
