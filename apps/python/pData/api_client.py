@@ -13,6 +13,12 @@ HEADERS = {"Content-Type": "application/json"}
 
 def post_lap(lap_payload):
     # type: (dict) -> tuple[str, str | None]
+    """
+    Handle a valid Lap that needs to be stored.
+
+    The backend also handles the Session associated - based on the presence of the 'sessionId' key
+    a new Session Doc is created, or the old one associated with the Lap
+    """
     data = json.dumps(lap_payload)
     res = _post(LAP_POST_URL, data)
     if res.status_code == 202:
@@ -35,6 +41,10 @@ def init_lap_handler():
 
 def close_session(session_payload):
     # type: (dict) -> bool
+    """
+    Notify the backend that this Session is closed.
+    Can be used to trigger extra Session data calculation
+    """
     data = json.dumps(session_payload)
     res = _post(SESSION_CLOSE_URL, data)
     return res.ok
