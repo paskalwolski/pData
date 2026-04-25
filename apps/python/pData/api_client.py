@@ -3,6 +3,7 @@ import json
 import requests
 from requests import HTTPError, Response
 
+from apps.python.pData.models import LapDataRequest
 from exceptions import APIException
 
 LAP_POST_URL = ""
@@ -11,16 +12,15 @@ SESSION_CLOSE_URL = ""
 HEADERS = {"Content-Type": "application/json"}
 
 
-def post_lap(lap_payload):
-    # type: (dict) -> tuple[str, str | None]
+def post_lap(lap_data_request):
+    # type: (LapDataRequest) -> tuple[str, str | None]
     """
     Handle a valid Lap that needs to be stored.
 
     The backend also handles the Session associated - based on the presence of the 'sessionId' key
     a new Session Doc is created, or the old one associated with the Lap
     """
-    data = json.dumps(lap_payload)
-    res = _post(LAP_POST_URL, data)
+    res = _post(LAP_POST_URL, lap_data_request.to_json())
     if res.status_code == 202:
         # Data wasn't processed correctly - expected a 200
         raise APIException("Payload incorrectly processed: received 202 code")

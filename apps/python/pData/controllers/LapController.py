@@ -1,7 +1,7 @@
 import traceback
 
 from plogging import pLogger
-from models import LapPayload, Telemetry, UpdatePayload, SessionData
+from models import LapDataRequest, LapPayload, Telemetry, UpdatePayload, SessionData
 from worker import worker
 from exceptions import (
     APIException,
@@ -54,16 +54,17 @@ class LapController:
         telemetry_object = (
             None if self.discard else self._prepare_telemetry_data()
         )  # pylint: disable=W0612
-        lap_data = {
-            "lapNumber": self.lap_number,
-            "lapTime": last_lap_time,
-            "isValid": not self.is_invalid,
-            "isPit": self.is_pit,
-            "discard": self.discard,
-            "lapData": telemetry_object,
-        }
+        lap_data_request = LapDataRequest(
+            self.lap_number,
+            last_lap_time,
+            not self.is_invalid,
+            self.is_pit,
+            self.discard,
+            telemetry_object,
+            self.session_data,
+        )
         try:
-            lap_id, session_id = api_client.post_lap(lap_data)
+            lap_id, session_id = api_client.post_lap(lap_data_request)
         except APIException as e:
             log("Failed Lap Upload", traceback.format_exception(e))
             return
@@ -97,14 +98,16 @@ class LapController:
             self.is_invalid = True
 
     def _prepare_telemetry_data(self):
-        # type: () -> dict
+        # type: () -> dict[str, list]
         # Adjust the telemetry for last meter value
         shifted_telemetry = (
             self.lap_telemetry[self.last_stored_meter :]
             + self.lap_telemetry[: self.last_stored_meter]
         )
-        telemetry_object = Telemetry.serialise_telemetry_object(  # pylint: disable=W0612
-            shifted_telemetry
+        telemetry_object = (
+            Telemetry.serialise_telemetry_object(  # pylint: disable=W0612
+                shifted_telemetry
+            )
         )
         return telemetry_object
 
