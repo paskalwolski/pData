@@ -2,6 +2,8 @@ from exceptions import SessionBoundaryExceeded
 from controllers import SessionController
 from plogging import pLogger
 
+from worker import worker
+
 from models import EventData, UpdatePayload
 
 log = pLogger(__name__).log
@@ -34,4 +36,5 @@ class EventController:
     def close(self):
         if self.session:
             self.session.close()
+        worker.stop()
         log("Closed Event")

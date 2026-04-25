@@ -42,7 +42,6 @@ class SessionController:
             self.lap = LapController(self.session_data, lap_number, self.register_lap)
 
     def close(self):
-        # TODO: Check if we have valid laps, and decide to post the session
         if self.lap:
             self.lap.close()
         worker.enqueue(self._close_process)
@@ -75,9 +74,9 @@ class SessionController:
         if not self.remote_session_id:
             logger.worker_log("No remote session to close")
             return
+        api_client.close_session({"sessionId": self.remote_session_id})
         logger.worker_log(
-            "Closing Remote Session {}: {} laps".format(
+            "Closed Remote Session {}: {} laps".format(
                 self.remote_session_id, len(self.laps)
             )
         )
-        api_client.close_session({"sessionId": self.remote_session_id})
