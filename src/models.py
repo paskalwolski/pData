@@ -124,7 +124,7 @@ class SessionDataRequest(BaseRequestModel):
         self.driver = sessionData.event_data.driver
         self.car = sessionData.event_data.car
         self.track = sessionData.event_data.track
-        self.session_time = sessionData.session_timestamp
+        self.session_time = sessionData.session_timestamp.isoformat()
         self.session_type = sessionData.session
 
 
