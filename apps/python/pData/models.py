@@ -123,7 +123,6 @@ class SessionDataRequest(BaseRequestModel):
         # type: (SessionData) -> None
         self.driver = sessionData.event_data.driver
         self.car = sessionData.event_data.car
-        self.driver = sessionData.event_data.driver
         self.track = sessionData.event_data.track
         self.session_time = sessionData.session_timestamp
         self.session_type = sessionData.session
