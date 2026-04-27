@@ -1,12 +1,5 @@
 class BoundaryExceeded(BaseException):
-    def __init__(
-        self,
-        *args,
-        reason=None,
-    ):
-        # type: (str | None, object) -> None
-        self.reason = reason
-        super().__init__(*args)
+    pass
 
 
 class SessionBoundaryExceeded(BoundaryExceeded):

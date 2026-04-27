@@ -2,7 +2,7 @@ import queue
 import threading
 import traceback
 
-from plogging import pLogger
+from src.plogging import pLogger
 
 log = pLogger(__name__).log
 

@@ -1,16 +1,16 @@
 import traceback
 
-from plogging import pLogger
-from models import LapDataRequest, LapPayload, Telemetry, UpdatePayload, SessionData
-from worker import worker
-from exceptions import (
+from src.plogging import pLogger
+from src.models import LapDataRequest, LapPayload, Telemetry, UpdatePayload, SessionData
+from src.worker import worker
+from src.exceptions import (
     APIException,
     InvalidBundle,
     LapBoundaryExceeded,
     SessionBoundaryExceeded,
 )
 
-import api_client
+import src.api_client as api_client
 
 
 log = pLogger(__name__).log
@@ -81,11 +81,11 @@ class LapController:
             if lap == 1:
                 # Reset lap count implies a new session
                 # TODO: Handle the case where current_lap == new_lap == 1 (restart on lap 1)
-                raise SessionBoundaryExceeded(reason="Lap Count Reset")
+                raise SessionBoundaryExceeded("Lap Count Reset")
 
             # Next lap started
             raise LapBoundaryExceeded(
-                reason="Lap Number {} does not match expected {}".format(
+                "Lap Number {} does not match expected {}".format(
                     lap, self.lap_number
                 ),
             )

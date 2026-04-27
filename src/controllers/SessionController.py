@@ -1,12 +1,12 @@
 from datetime import datetime
 
-from worker import worker
-from controllers import LapController
-from models import EventData, SessionData, UpdatePayload
-from plogging import pLogger
-from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
+from src.worker import worker
+from src.controllers import LapController
+from src.models import EventData, SessionData, UpdatePayload
+from src.plogging import pLogger
+from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 
-import api_client
+import src.api_client as api_client
 
 logger = pLogger(__name__)
 

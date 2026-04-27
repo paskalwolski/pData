@@ -3,8 +3,8 @@ import json
 import requests
 
 
-from models import LapDataRequest
-from exceptions import APIException
+from src.models import LapDataRequest
+from src.exceptions import APIException
 
 LAP_POST_URL = ""
 SESSION_CLOSE_URL = ""

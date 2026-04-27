@@ -1,10 +1,10 @@
-from exceptions import SessionBoundaryExceeded
-from controllers import SessionController
-from plogging import pLogger
+from src.exceptions import SessionBoundaryExceeded
+from src.controllers import SessionController
+from src.plogging import pLogger
 
-from worker import worker
+from src.worker import worker
 
-from models import EventData, UpdatePayload
+from src.models import EventData, UpdatePayload
 
 log = pLogger(__name__).log
 

@@ -5,9 +5,9 @@ import ac
 import configparser
 import base64
 
-from DataUploader import LapUploader
-from TrackDataController import TrackDataController
-from plogging import log
+from src.DataUploader import LapUploader
+from src.TrackDataController import TrackDataController
+from src.plogging import log
 
 SESSION_LUT = (
     (0, "PRACTICE"),

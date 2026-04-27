@@ -1,9 +1,9 @@
 import sys
 import os
 
-# Load the required external libs
-sys.path.append("apps/python/pData/deps/stdlib64")
-sys.path.append("apps/python/pData/deps")
+_app_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(_app_dir, "deps", "stdlib64"))
+sys.path.insert(0, os.path.join(_app_dir, "deps"))
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 # pylint: disable=C0413,C0411
@@ -12,12 +12,12 @@ import acsys  # type: ignore
 import threading
 import math
 
-from DataUploader import stop_worker
+from src.DataUploader import stop_worker
 from sim_info import info
-from plogging import pLogger
+from src.plogging import pLogger
 
-from controllers import EventController
-from models import EventData, Telemetry, UpdatePayload, LapPayload
+from src.controllers import EventController
+from src.models import EventData, Telemetry, UpdatePayload, LapPayload
 
 # pylint: enable=C0413,C0411
 
