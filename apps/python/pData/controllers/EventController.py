@@ -33,6 +33,10 @@ class EventController:
             self.session = SessionController(self.event_data, payload.session)
             self.session.update(payload)
 
+    @property
+    def track_length(self):
+        return self.event_data.track_length
+
     def close(self):
         if self.session:
             self.session.close()
