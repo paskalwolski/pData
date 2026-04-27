@@ -28,6 +28,7 @@ class BaseRequestModel:
 class Telemetry:
     _json_field_names = {
         "speed": "speed",
+        "lap_time": "lapTime",
         "gas": "gas",
         "brake": "brake",
         "gear": "gear",
@@ -38,9 +39,12 @@ class Telemetry:
         "ers": "ers",
     }
 
-    def __init__(self, *, d, speed, gas, brake, gear, steer, rpm, pos_x, pos_z, ers):
-        # type: (Telemetry, int, float, float, float, int, float, float, float, float, float) -> None
+    def __init__(
+        self, *, d, lap_time, speed, gas, brake, gear, steer, rpm, pos_x, pos_z, ers
+    ):
+        # type: (Telemetry, int, float, float, float, float, int, float, float, float, float, float) -> None
         self.d = d
+        self.lap_time = lap_time
         self.speed = speed
         self.gas = gas
         self.brake = brake
