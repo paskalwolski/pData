@@ -6,7 +6,7 @@ from models import EventData, SessionData, UpdatePayload
 from plogging import pLogger
 from exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 
-from apps.python.pData import api_client
+import api_client
 
 logger = pLogger(__name__)
 

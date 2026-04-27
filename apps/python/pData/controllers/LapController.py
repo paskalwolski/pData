@@ -10,7 +10,7 @@ from exceptions import (
     SessionBoundaryExceeded,
 )
 
-from apps.python.pData import api_client
+import api_client
 
 
 log = pLogger(__name__).log

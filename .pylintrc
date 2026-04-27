@@ -1,5 +1,6 @@
 [MAIN]
 py-version = 3.3
+source-roots = apps/python/pData/deps,apps/python/pData/deps/stdlib64,apps/python/pData
 
 [MESSAGES CONTROL]
 disable =

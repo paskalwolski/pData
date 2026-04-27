@@ -16,8 +16,8 @@ from DataUploader import stop_worker
 from sim_info import info
 from plogging import pLogger
 
-from apps.python.pData.controllers import EventController
-from apps.python.pData.models import EventData, Telemetry, UpdatePayload, LapPayload
+from controllers import EventController
+from models import EventData, Telemetry, UpdatePayload, LapPayload
 
 # pylint: enable=C0413,C0411
 

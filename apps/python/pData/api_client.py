@@ -1,9 +1,9 @@
 import json
 
 import requests
-from requests import HTTPError, Response
 
-from apps.python.pData.models import LapDataRequest
+
+from models import LapDataRequest
 from exceptions import APIException
 
 LAP_POST_URL = ""
@@ -57,15 +57,15 @@ def close_session(session_payload):
 
 
 def _post(url, data):
-    # type: (str, str | None) -> Response
+    # type: (str, str | None) -> requests.Response
     for attempt in range(2):
         try:
-            r = requests.post(url, data=data, headers=HEADERS)
+            r = requests.post(url, data=data, headers=HEADERS, timeout=30)
             r.raise_for_status()
             return r
         except requests.exceptions.ConnectionError as e:
             if attempt == 1:
                 raise APIException("Failed POST retry") from e
-        except HTTPError as e:
+        except requests.HTTPError as e:
             raise APIException("Failed POST request") from e
     raise APIException("Failed POST")
