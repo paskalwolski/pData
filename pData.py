@@ -1,5 +1,6 @@
 import sys
 import os
+import traceback
 
 _app_dir = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(_app_dir, "deps", "stdlib64"))
@@ -54,43 +55,46 @@ def acMain(ac_version):  # pylint: disable=W0613
 def acUpdate(deltaT):  # pylint: disable=W0613
     global event_controller
     global last_meter, best_meter_delta
+    try:
 
-    # Skip update if app wasn't initialized (e.g., in replay mode)
-    if not info.graphics.status == 2:
-        return
-    if event_controller is None:
-        event_controller = EventController(_get_event_data())
-
-    track_distance = round(
-        ac.getCarState(0, acsys.CS.NormalizedSplinePosition)
-        * event_controller.track_length,
-        2,
-    )
-    track_meter = math.floor(track_distance)
-    meter_delta = abs(
-        (track_distance - track_meter) - 0.5
-    )  # absolute distance from midpoint
-
-    is_new_meter = track_meter != last_meter
-
-    if not is_new_meter:
-        # Same meter — skip if this reading is not closer to the midpoint
-        if best_meter_delta is not None and meter_delta >= best_meter_delta:
-            # Ignore this meter point - we already have a better one
+        # Skip update if app wasn't initialized (e.g., in replay mode)
+        if not info.graphics.status == 2:
             return
+        if event_controller is None:
+            event_controller = EventController(_get_event_data())
 
-    else:
-        # Track the meter and meter_delta
-        last_meter = track_meter
-        best_meter_delta = meter_delta
+        track_distance = round(
+            ac.getCarState(0, acsys.CS.NormalizedSplinePosition)
+            * event_controller.track_length,
+            2,
+        )
+        track_meter = math.floor(track_distance)
+        meter_delta = abs(
+            (track_distance - track_meter) - 0.5
+        )  # absolute distance from midpoint
 
-    # Track the meter based on spline distance - starting at meter 0
-    spline_meter = track_meter - 1
+        is_new_meter = track_meter != last_meter
 
-    # Read telemetry when we are sure we'll use it
-    update_payload = _get_update_payload(spline_meter)
-    event_controller.update(update_payload)
-    # Trigger the Controller Updates
+        if not is_new_meter:
+            # Same meter — skip if this reading is not closer to the midpoint
+            if best_meter_delta is not None and meter_delta >= best_meter_delta:
+                # Ignore this meter point - we already have a better one
+                return
+
+        else:
+            # Track the meter and meter_delta
+            last_meter = track_meter
+            best_meter_delta = meter_delta
+
+        # Track the meter based on spline distance - starting at meter 0
+        spline_meter = track_meter - 1
+
+        # Read telemetry when we are sure we'll use it
+        update_payload = _get_update_payload(spline_meter)
+        # Trigger the Controller Updates
+        event_controller.update(update_payload)
+    except Exception as e:
+        log('ERROR', traceback.format_exc())
 
 
 def acShutdown():
