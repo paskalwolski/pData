@@ -111,7 +111,7 @@ def acShutdown():
 def _get_update_payload(distance):
     # type: (int) -> UpdatePayload
     session_label = SESSION_LUT[info.graphics.session][1]
-    lap_number = info.graphics.completedLap + 1
+    lap_number = info.graphics.completedLaps + 1
     last_lap_time = info.graphics.lastTime
 
     lap_time = ac.getCarState(0, acsys.CS.LapTime)
@@ -158,5 +158,5 @@ def _get_event_data():
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
-        info.static.trackSplineLength,
+        ac.getTrackLength(),
     )
