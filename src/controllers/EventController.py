@@ -1,5 +1,5 @@
 from src.exceptions import SessionBoundaryExceeded
-from src.controllers import SessionController
+from src.controllers.SessionController import SessionController
 from src.plogging import pLogger
 
 from src.worker import worker

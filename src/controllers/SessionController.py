@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from src.worker import worker
-from src.controllers import LapController
+from src.controllers.LapController import LapController
 from src.models import EventData, SessionData, UpdatePayload
 from src.plogging import pLogger
 from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
