@@ -158,5 +158,5 @@ def _get_event_data():
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
-        ac.getTrackLength(),
+        int(math.ceil(ac.getTrackLength())),
     )
