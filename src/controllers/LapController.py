@@ -51,9 +51,9 @@ class LapController:
 
     def _close_process(self, last_lap_time):
         # type: (float) -> None
-        telemetry_object = (
-            None if self.discard else self._prepare_telemetry_data()
-        )  # pylint: disable=W0612
+        if self.discard:
+            log("Discarded lap - no upload")
+        telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
         lap_data_request = LapDataRequest(
             self.lap_number,
             last_lap_time,
@@ -85,9 +85,7 @@ class LapController:
 
             # Next lap started
             raise LapBoundaryExceeded(
-                "Lap Number {} does not match expected {}".format(
-                    lap, self.lap_number
-                ),
+                "Lap Number {} does not match expected {}".format(lap, self.lap_number),
             )
 
     def _check_for_discard(self, lap_data):
