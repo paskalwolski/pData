@@ -93,8 +93,8 @@ def acUpdate(deltaT):  # pylint: disable=W0613
         update_payload = _get_update_payload(spline_meter)
         # Trigger the Controller Updates
         event_controller.update(update_payload)
-    except Exception as e:
-        log('ERROR', traceback.format_exc())
+    except Exception:
+        log("ERROR", traceback.format_exc())
 
 
 def acShutdown():
