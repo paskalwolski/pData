@@ -1,6 +1,7 @@
 {
     "python.analysis.extraPaths": [
-        "./apps/python/pData/deps/stdlib64"
+        "./deps/stdlib64",
+        "./deps"
     ],
     "python.analysis.typeCheckingMode": "standard"
 }

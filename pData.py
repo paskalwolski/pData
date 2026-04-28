@@ -13,10 +13,10 @@ import acsys  # type: ignore
 import threading
 import math
 
-from src.DataUploader import stop_worker
 from sim_info import info
-from src.plogging import pLogger
 
+from src.DataUploader import stop_worker
+from src.plogging import pLogger
 from src.controllers import EventController
 from src.models import EventData, Telemetry, UpdatePayload, LapPayload
 
