@@ -19,6 +19,10 @@ from src.DataUploader import stop_worker
 from src.plogging import pLogger
 from src.controllers import EventController
 from src.models import EventData, Telemetry, UpdatePayload, LapPayload
+from src.services.AppConfig import app_config
+
+# Load the config file as soon as we can
+app_config.load(os.path.join(_app_dir, "pData.ini"))
 
 # pylint: enable=C0413,C0411
 
@@ -158,7 +162,7 @@ def _get_update_payload(distance):
 
 def _get_event_data():
     return EventData(
-        ac.getDriverName(0),
+        getattr(app_config, "username", ac.getDriverName(0)),
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
