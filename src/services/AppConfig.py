@@ -10,7 +10,9 @@ class ConfigParser:
         parser = configparser.ConfigParser()
         parser.read(path)
         for section in parser.sections():
-            setattr(self, section, dict(parser[section]))
+            opts = parser[section]
+            for opt, val in opts.items():
+                setattr(self, "{}.{}".format(section, opt), val)
         log("Config loaded from {}".format(path))
 
 

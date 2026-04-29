@@ -162,7 +162,7 @@ def _get_update_payload(distance):
 
 def _get_event_data():
     return EventData(
-        getattr(app_config, "username", ac.getDriverName(0)),
+        getattr(app_config, "user.username", ac.getDriverName(0)),
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
