@@ -97,7 +97,7 @@ def acUpdate(deltaT):  # pylint: disable=W0613
         update_payload = _get_update_payload(spline_meter)
         # Trigger the Controller Updates
         event_controller.update(update_payload)
-    except Exception: # pylint: disable=W0718
+    except Exception:  # pylint: disable=W0718
         log("ERROR", traceback.format_exc())
 
 
@@ -166,5 +166,5 @@ def _get_event_data():
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
-        int(math.ceil(ac.getTrackLength())),
+        int(math.ceil(ac.getTrackLength(0))),
     )
