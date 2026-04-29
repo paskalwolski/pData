@@ -16,7 +16,7 @@ class ConfigParser:
         log("Config loaded from {}".format(path))
 
     def __getitem__(self, key):
-        return getattr(self, key, None)
+        return getattr(self, key.upper() if isinstance(key, str) else key, None)
 
 
 app_config = ConfigParser()
