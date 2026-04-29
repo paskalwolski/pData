@@ -43,6 +43,11 @@ class SessionController:
             self.lap.close(last_lap_time)
             lap_number = payload.lap_data.lap_number
             self.lap = LapController(self.session_data, lap_number, self.register_lap)
+            try:
+                self.lap.update(payload)
+            except LapBoundaryExceeded:
+                logger.log("Payload for lap {} unsuccessful".format(payload.lap_data.lap_number))
+                return
 
     def close(self):
         if self.lap:
