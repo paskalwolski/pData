@@ -5,6 +5,7 @@ from src.controllers.LapController import LapController
 from src.models import EventData, SessionData, UpdatePayload
 from src.plogging import pLogger
 from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
+from src.data_displays.LapStatus import lap_status_display
 
 import src.api_client as api_client
 
@@ -21,6 +22,7 @@ class SessionController:
         self.laps = []  # type: list[str]
         self.lap = None  # type: LapController | None
         worker.enqueue(self._open_process)
+        lap_status_display.register_session()
         logger.log("Session Ready")
 
     def update(self, payload):
