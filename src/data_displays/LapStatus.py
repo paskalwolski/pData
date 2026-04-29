@@ -1,4 +1,5 @@
-import ac
+import ac  # type: ignore
+from src.services.AppConfig import app_config
 
 RED = (
     1.0,
@@ -71,7 +72,8 @@ class LapStatus:
         """
         # Create a new app window for this display
         self.app = ac.newApp("pData_LapState")
-        ac.setSize(self.app, 300, 90)
+        # TODO: Improve the history display so that it doesn't render at all if not enabled
+        ac.setSize(self.app, 300, 90 if app_config["lap_display.show_history"] else 80)
         ac.drawBackground(self.app, 0)
         ac.setTitle(self.app, " ")  # Empty title so it's not distracting
 

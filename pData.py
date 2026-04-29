@@ -7,6 +7,11 @@ sys.path.insert(0, os.path.join(_app_dir, "deps", "stdlib64"))
 sys.path.insert(0, os.path.join(_app_dir, "deps"))
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
+# Load the config file as soon as we can
+from src.services.AppConfig import app_config  # pylint: disable=C0413,C0412
+
+app_config.load(os.path.join(_app_dir, "pData.ini"))
+
 # pylint: disable=C0413,C0411
 import ac  # type: ignore
 import acsys  # type: ignore
@@ -19,10 +24,6 @@ from src.DataUploader import stop_worker
 from src.plogging import pLogger
 from src.controllers import EventController
 from src.models import EventData, Telemetry, UpdatePayload, LapPayload
-from src.services.AppConfig import app_config
-
-# Load the config file as soon as we can
-app_config.load(os.path.join(_app_dir, "pData.ini"))
 
 # pylint: enable=C0413,C0411
 
@@ -162,7 +163,7 @@ def _get_update_payload(distance):
 
 def _get_event_data():
     return EventData(
-        getattr(app_config, "user.username", ac.getDriverName(0)),
+        app_config["user.username"] or ac.getDriverName(0),
         # TODO: Improve fetching the track name
         ac.getTrackName(0),
         ac.getCarName(0),
