@@ -3,6 +3,7 @@ import traceback
 from src.plogging import pLogger
 from src.models import LapDataRequest, LapPayload, Telemetry, UpdatePayload, SessionData
 from src.worker import worker
+from src.data_displays import lap_status_display
 from src.exceptions import (
     APIException,
     InvalidBundle,
@@ -29,6 +30,7 @@ class LapController:
 
         self.is_pit = False
         self.is_invalid = False
+        lap_status_display.register_lap(lap_number)
 
         log("Lap {} Ready".format(lap_number))
 
@@ -94,6 +96,11 @@ class LapController:
             self.is_pit = True
         if lap_data.invalid:
             self.is_invalid = True
+
+        if lap_data.in_pit or lap_data.invalid:
+            lap_status_display.set_state(
+                self.lap_number, lap_data.in_pit, lap_data.invalid
+            )
 
     def _prepare_telemetry_data(self):
         # type: () -> dict[str, list]
