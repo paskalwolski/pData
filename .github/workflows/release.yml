@@ -1,0 +1,23 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release zip
+        run: python dev_utils/build_release.py
+
+      - name: Create release and upload asset
+        uses: ncipollo/release-action@v1
+        with:
+          artifacts: pData.zip
+          token: ${{ secrets.GITHUB_TOKEN }}

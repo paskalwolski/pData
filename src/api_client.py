@@ -6,8 +6,8 @@ import requests
 from src.models import LapDataRequest
 from src.exceptions import APIException
 
-LAP_POST_URL = ""
-SESSION_CLOSE_URL = ""
+LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
+SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 
 HEADERS = {"Content-Type": "application/json"}
 
