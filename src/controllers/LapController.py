@@ -49,7 +49,16 @@ class LapController:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
             return
         worker.enqueue(lambda: self._close_process(last_lap_time))
-        log("Fired Close Lap {}: {}".format(self.lap_number, last_lap_time))
+        log("Fired Close Lap {} in session {}: {}".format(self.lap_number, self.session_data.remote_session_id, last_lap_time))
+
+    def register_session_id(self, session_id):
+        # type: (str) -> None
+        """
+        Pass a new sessionId into the lap object, so we can include a lap
+        created before the session request is completed
+        """
+        log("Linking lap to session {}".format(session_id))
+        self.session_data.remote_session_id = session_id
 
     def _close_process(self, last_lap_time):
         # type: (float) -> None

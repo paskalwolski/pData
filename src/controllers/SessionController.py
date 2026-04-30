@@ -60,9 +60,19 @@ class SessionController:
         """Callback used when closing a lap
         this allows the session to keep track of how many laps were live
         """
-        if not self.remote_session_id and session_id:
-            self.remote_session_id = session_id
+        if not session_id:
+            logger.log("No Session Update for lap {}".format(lap_id))
+            return
+        if self.remote_session_id:
+            logger.log("Failed trying to update session {} with new id {}".format(self.remote_session_id, session_id))
+            return
+        
+        # Track this session, and ensure the id is propagated into the Lap as well
+        # TODO: Improve this - maybe fetch sessionData just-in-time for lap?
+        self.remote_session_id = session_id
         self.laps.append(lap_id)
+        if self.lap:
+            self.lap.register_session_id(session_id)
 
     @property
     def session_data(self):

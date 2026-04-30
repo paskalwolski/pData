@@ -137,6 +137,7 @@ class LapDataRequest(BaseRequestModel):
         "discard": "discard",
         "lap_data": "lapData",
         "session_data": "sessionData",
+        "session_id": "sessionId",
     }
 
     def __init__(
