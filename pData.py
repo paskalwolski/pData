@@ -121,7 +121,7 @@ def _get_update_payload(distance):
     # type: (int) -> UpdatePayload
     session_label = SESSION_LUT[info.graphics.session][1]
     lap_number = info.graphics.completedLaps + 1
-    last_lap_time = info.graphics.lastTime
+    last_lap_time = ac.getCarState(0, acsys.CS.LastLap)
 
     lap_time = ac.getCarState(0, acsys.CS.LapTime)
     speed = round(ac.getCarState(0, acsys.CS.SpeedKMH), 2)
