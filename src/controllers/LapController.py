@@ -48,8 +48,15 @@ class LapController:
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
             return
+        if self.discard:
+            log("Discarded lap {} - Discard Flagged")
+            return
         worker.enqueue(lambda: self._close_process(last_lap_time))
-        log("Fired Close Lap {} in session {}: {}".format(self.lap_number, self.session_data.remote_session_id, last_lap_time))
+        log(
+            "Fired Close Lap {} in session {}: {}".format(
+                self.lap_number, self.session_data.remote_session_id, last_lap_time
+            )
+        )
 
     def register_session_id(self, session_id):
         # type: (str) -> None
@@ -62,8 +69,6 @@ class LapController:
 
     def _close_process(self, last_lap_time):
         # type: (float) -> None
-        if self.discard:
-            log("Discarded lap - no upload")
         telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
         lap_data_request = LapDataRequest(
             self.lap_number,
