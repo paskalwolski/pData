@@ -16,3 +16,6 @@ class InvalidBundle(ValueError):
 
 class APIException(BaseException):
     pass
+
+class ACException(BaseException):
+    pass

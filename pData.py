@@ -8,6 +8,7 @@ sys.path.insert(0, os.path.join(_app_dir, "deps"))
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 # Load the config file as soon as we can
+from src.exceptions import ACException
 from src.services.AppConfig import app_config
 
 app_config.load(os.path.join(_app_dir, "pData.ini"))
@@ -21,7 +22,7 @@ from sim_info import info
 
 from src.DataUploader import stop_worker
 from src.plogging import pLogger
-from src.controllers import EventController
+from src.controllers import EventController, TrackDataController
 from src.models import EventData, Telemetry, UpdatePayload, LapPayload
 
 
@@ -38,20 +39,23 @@ log = pLogger(__name__).log
 track_length = None  # type: int | None
 last_meter = None  # type: int | None
 event_controller = None  # type: EventController | None
+track_data_controller = None  # type: TrackDataController | None
 
 # Best (smallest) delta-from-midpoint seen for the current meter
 best_meter_delta = None  # type: int | None
 
 
 def acMain(ac_version):  # pylint: disable=W0613
-    global event_controller
+    global event_controller, track_data_controller
     # Only enable the app for Live AC Mode
     if info.graphics.status != 2:
         log("AC is not Live. App disabled.")
         return "pData"
-
-    event_controller = EventController(_get_event_data())
-
+    track_data_controller = TrackDataController(
+        ac.getTrackName(0), ac.getTrackConfiguration(0)
+    )
+    event_data = _get_event_data()
+    event_controller = EventController(event_data)
     return "pData"
 
 
@@ -102,9 +106,11 @@ def acUpdate(deltaT):  # pylint: disable=W0613
 
 def acShutdown():
     global event_controller
-    if not event_controller:
-        log("Event Controller not initialised")
+    if info.graphics.status != 2:
+        log("Closing non-live session")
         return
+    if not event_controller:
+        raise ACException("Event Controller not initialised")
 
     event_controller.close()
     stop_worker()
@@ -160,10 +166,12 @@ def _get_update_payload(distance):
 
 
 def _get_event_data():
+    global track_data_controller
+    if not track_data_controller:
+        raise ACException("Track Data Controller not initialised")
     return EventData(
         app_config["user.username"] or ac.getDriverName(0),
-        # TODO: Improve fetching the track name
-        ac.getTrackName(0),
+        track_data_controller.track_id,
         ac.getCarName(0),
         int(math.ceil(ac.getTrackLength(0))),
     )

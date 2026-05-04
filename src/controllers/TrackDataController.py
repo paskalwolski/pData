@@ -2,11 +2,11 @@ import os
 
 
 class TrackDataController:
-    def __init__(self, track, variant=""):
-        # type: (str, str) -> None
+    def __init__(self, track, variant):
+        # type: (str, str | None) -> None
         self.track = track
         self.variant = variant
-        self.circuit_dir = os.path.join(os.getcwd(), "content", "tracks", track)
+        self.circuit_dir = os.path.join(os.getcwd(), "content", "tracks", self.track)
 
     def load(self):
         self._load_track_ini()
