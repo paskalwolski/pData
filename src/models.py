@@ -152,3 +152,22 @@ class LapDataRequest(BaseRequestModel):
         self.discard = discard
         self.lap_data = lap_data
         self.session_data = SessionDataRequest(session_data)
+
+
+class TrackConfigData:
+    """Data grabbed from the Track config file"""
+
+    def __init__(self, track_name):
+        # type: (str | None) -> None
+        self.track_name = track_name
+
+
+class MapConfigData:
+    def __init__(self, height, width, x_offset, y_offset, margin, image_path):
+        # type: (float, float, float, float, float, str) -> None
+        self.height = height
+        self.width = width
+        self.x_offset = x_offset
+        self.y_offset = y_offset
+        self.margin = margin
+        self.image_path = image_path
