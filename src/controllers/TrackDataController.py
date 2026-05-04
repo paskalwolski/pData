@@ -10,8 +10,7 @@ from src.exceptions import APIException
 from src.worker import worker
 from src.models import MapConfigData, TrackConfigData, TrackDataRequest
 from src.plogging import pLogger
-
-# TODO: Add Track Data Display
+from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
 log = pLogger(__name__).log
 
@@ -28,6 +27,7 @@ class TrackDataController:
 
         self._load_track_details()
         self._load_map_details()
+        self.display = TrackDataDisplay(self.fire_track_data_upload)
         # TODO: Add Section Data
         # TODO: Expose data states to see if they're suitable for upload
 
