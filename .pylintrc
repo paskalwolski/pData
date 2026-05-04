@@ -13,7 +13,7 @@ disable =
     fixme,
 
     # AC built-in modules unavailable to pylint
-    import-error,
+    ; import-error,
 
     # AC app functions (acMain, acUpdate, acShutdown) don't fit standard naming
     invalid-name,

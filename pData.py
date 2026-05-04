@@ -8,11 +8,10 @@ sys.path.insert(0, os.path.join(_app_dir, "deps"))
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 # Load the config file as soon as we can
-from src.services.AppConfig import app_config  # pylint: disable=C0413,C0412
+from src.services import app_config
 
 app_config.load(os.path.join(_app_dir, "pData.ini"))
 
-# pylint: disable=C0413,C0411
 import ac  # type: ignore
 import acsys  # type: ignore
 import threading
@@ -25,7 +24,6 @@ from src.plogging import pLogger
 from src.controllers import EventController
 from src.models import EventData, Telemetry, UpdatePayload, LapPayload
 
-# pylint: enable=C0413,C0411
 
 SESSION_LUT = (
     (0, "PRACTICE"),
