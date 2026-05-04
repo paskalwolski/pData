@@ -16,12 +16,16 @@ class BaseRequestModel:
     def to_dict(self):
         d = {}
         for f, j in self._json_field_names.items():
-            v = getattr(self, f)
-            d[j] = v.to_dict() if isinstance(v, BaseRequestModel) else v
+            v = getattr(self, f, None)
+            if v is not None:
+                d[j] = v.to_dict() if isinstance(v, BaseRequestModel) else v
         return d
 
     def to_json(self):
         return json.dumps(self.to_dict())
+
+    def __getitem__(self, key):
+        return getattr(self, key, None)
 
 
 # Telemetry: Static bundle containing the telemtry data for a single meter
@@ -188,10 +192,12 @@ class TrackDataRequest(BaseRequestModel):
     def __init__(self, track_id, track_details, map_details, map_image_data=None):
         # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
         self.track_id = track_id
-        self.track_name = getattr(track_details, "track_name", None)
-        self.width = getattr(map_details, "width", None)
-        self.height = getattr(map_details, "height", None)
-        self.x_offset = getattr(map_details, "x_offset", None)
-        self.y_offset = getattr(map_details, "y_offset", None)
-        self.margin = getattr(map_details, "margin", None)
+        if track_details:
+            self.track_name = track_details.track_name
+        if map_details:
+            self.width = map_details.width
+            self.height = map_details.height
+            self.x_offset = map_details.x_offset
+            self.y_offset = map_details.y_offset
+            self.margin = map_details.margin
         self.image = map_image_data
