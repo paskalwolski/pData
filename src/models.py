@@ -171,3 +171,27 @@ class MapConfigData:
         self.y_offset = y_offset
         self.margin = margin
         self.image_path = image_path
+
+
+class TrackDataRequest(BaseRequestModel):
+    _json_field_names = {
+        "track_id": "trackId",
+        "track_name": "trackName",
+        "width": "width",
+        "height": "height",
+        "x_offset": "xOffset",
+        "y_offset": "yOffset",
+        "margin": "margin",
+        "image": "image",
+    }
+
+    def __init__(self, track_id, track_details, map_details, map_image_data=None):
+        # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
+        self.track_id = track_id
+        self.track_name = getattr(track_details, "track_name", None)
+        self.width = getattr(map_details, "width", None)
+        self.height = getattr(map_details, "height", None)
+        self.x_offset = getattr(map_details, "x_offset", None)
+        self.y_offset = getattr(map_details, "y_offset", None)
+        self.margin = getattr(map_details, "margin", None)
+        self.image = map_image_data
