@@ -8,7 +8,7 @@ sys.path.insert(0, os.path.join(_app_dir, "deps"))
 os.environ["PATH"] = os.environ["PATH"] + ";."
 
 # Load the config file as soon as we can
-from src.services import app_config
+from src.services.AppConfig import app_config
 
 app_config.load(os.path.join(_app_dir, "pData.ini"))
 
