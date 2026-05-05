@@ -169,8 +169,8 @@ class TrackDataState:
     value_labels = {
             track_details_id: 'Track Details', 
             map_details_id: "Map Details", 
-            map_present_id: "Map Image OK", 
-            map_margin_id: "Margin OK (10px)"
+            map_present_id: "Map Image", 
+            map_margin_id: "Margin (10px)"
         }
 
     def __init__(self,*,has_track_details = None, has_map_details = None,map_margin_ok=None,has_map=None):
