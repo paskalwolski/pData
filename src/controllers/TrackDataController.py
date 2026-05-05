@@ -8,7 +8,7 @@ import traceback
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, TrackConfigData, TrackDataRequest
+from src.models import MapConfigData, TrackConfigData, TrackDataRequest, TrackDataState
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -18,6 +18,7 @@ log = pLogger(__name__).log
 class TrackDataController:
     def __init__(self, track, variant):
         # type: (str, str | None) -> None
+        self.display = TrackDataDisplay(self.fire_track_data_upload)
         self.track = track
         self.variant = variant
         
@@ -29,27 +30,16 @@ class TrackDataController:
 
         self._load_track_details()
         self._load_map_details()
-        self.display = TrackDataDisplay(self.fire_track_data_upload)
         # TODO: Add Section Data
-        # TODO: Expose data states to see if they're suitable for upload
-
+        self.display.set_state(self.local_state)
     @property
     def track_id(self):
         return "{}_{}".format(self.track, self.variant) if self.variant else self.track
 
-    @property
-    def ready(self):
-        # type: () -> bool
-        """Checks available data to see if it's suitable for upload"""
-        if not self.track_details or not self.map_details:
-            return False
-        if math.floor(self.map_details.margin) != 10:
-            return False
-        return True
 
     def fire_track_data_upload(self):
-        if not self.ready:
-            log("Lap Data Not Ready for Upload")
+        if not self.local_state.ready:
+            log("Unable to upload Track data: Missing Data")
             return
         worker.enqueue(self._upload_track_data)
         log("Fired Track Data Upload: {}".format(self.track_id))
@@ -118,3 +108,12 @@ class TrackDataController:
             log("Failed Track Data Upload", traceback.format_exception(e))
             return
         log("Completed Track Data Upload: {}".format(self.track_id))
+
+    @property
+    def local_state(self):
+        # type: () -> TrackDataState
+        has_track_details = bool(self.track_details)
+        has_map_details = bool(self.map_details)
+        map_margin_ok = self.map_details and math.floor(self.map_details.margin) == 10
+        has_map = self.map_details and self.map_details.image_path
+        return TrackDataState(has_track_details=has_track_details,has_map_details=has_map_details,map_margin_ok=map_margin_ok, has_map=has_map)

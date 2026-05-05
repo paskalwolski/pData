@@ -158,6 +158,38 @@ class LapDataRequest(BaseRequestModel):
         self.session_data = SessionDataRequest(session_data)
 
 
+class TrackDataState:
+    track_details_id = 'track_details'
+    map_details_id = 'map_details'
+    map_present_id = 'map_present'
+    map_margin_id = 'map_margin_ok'
+    
+    value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id]
+
+    value_labels = {
+            track_details_id: 'Track Details', 
+            map_details_id: "Map Details", 
+            map_present_id: "Map Image OK", 
+            map_margin_id: "Margin OK (10px)"
+        }
+
+    def __init__(self,*,has_track_details = None, has_map_details = None,map_margin_ok=None,has_map=None):
+        setattr(self, self.track_details_id, has_track_details)
+        setattr(self, self.map_details_id, has_map_details)
+        setattr(self, self.map_present_id, has_map)
+        setattr(self, self.map_margin_id, map_margin_ok)
+
+    
+    def items(self):
+        return {id: getattr(self, id, None) for id in TrackDataState.value_ids}.items() # type: ignore
+
+    @property
+    def ready(self):
+        for id in self.value_ids:
+           if not getattr(self, id, None):
+               return False
+        return True
+
 class TrackConfigData:
     """Data grabbed from the Track config file"""
 
@@ -175,7 +207,6 @@ class MapConfigData:
         self.y_offset = y_offset
         self.margin = margin
         self.image_path = image_path
-
 
 class TrackDataRequest(BaseRequestModel):
     _json_field_names = {
