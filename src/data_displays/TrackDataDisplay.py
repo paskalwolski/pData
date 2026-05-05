@@ -59,7 +59,7 @@ class TrackDataDisplay:
         ac.setIconPosition(self.app, -10000, -10000)
         draw_y = _MARGIN 
         
-        self._create_label("Track Data", draw_y, _FULL_W, _HEADER_H, font_size=18)
+        self._create_label("Track Data", draw_y, width=_FULL_W, height=_HEADER_H, font_size=18)
         draw_y += _HEADER_H + _MARGIN
 
         for id, label in TrackDataState.value_labels.items():
@@ -96,8 +96,8 @@ class TrackDataDisplay:
 
 
     # TODO: Consider yanking this
-    def _create_label(self, text, y, x = _MARGIN, width = _FULL_W, height=_BUTTON_H, color = None, font_size = 14, font_alignment = 'center'):
-        # type: (str, int, int, int, int, tuple[float, float, float, float] | None, int, str)-> object
+    def _create_label(self, text, y, *, x = _MARGIN, width = _FULL_W, height=_BUTTON_H, color = None, font_size = 14, font_alignment = 'center'):
+        # type: (str, int, list, int, int, int, tuple[float, float, float, float] | None, int, str)-> object
         label = ac.addLabel(self.app, text)
         ac.setSize(label, width, height)
         ac.setFontSize(label, font_size)
@@ -110,7 +110,7 @@ class TrackDataDisplay:
     def _add_row(self, row_y, row_id, row_label_text, row_local_value=None):
         # type: (int, str, str, bool | None) -> None
         # Create friendly label
-        row_label = self._create_label(row_label_text, row_y, _MARGIN, _LABEL_W, _ROW_H, font_size=14)
+        row_label = self._create_label(row_label_text, row_y, x=_MARGIN, width=_LABEL_W, height=_ROW_H, font_size=14, font_alignment="left")
         
         # Create Local State Label
         local_col_x = 2 * _MARGIN + _LABEL_W
