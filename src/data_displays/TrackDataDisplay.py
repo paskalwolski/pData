@@ -18,12 +18,12 @@ _FULL_W = _WINDOW_W - 2 * _MARGIN
 log = pLogger(__name__).log
 
 class ACTION_STATE:
-    WAITING = "waiting"
-    DISABLED = "disabled"
-    READY = "ready"
-    UPLOADING = "uploading"
-    COMPLETE = "complete"
-    ERROR = "error"
+    WAITING = "WAITING"
+    DISABLED = "DISABLED"
+    READY = "READY"
+    UPLOADING = "UPLOADING"
+    COMPLETE = "COMPLETE"
+    ERROR = "ERROR"
 
 
 class TrackDataDisplay:
