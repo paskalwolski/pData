@@ -47,15 +47,10 @@ best_meter_delta = None  # type: int | None
 
 def acMain(ac_version):  # pylint: disable=W0613
     global event_controller, track_data_controller
-    # Only enable the app for Live AC Mode
-    if info.graphics.status != 2:
-        log("AC is not Live. App disabled.")
-        return "pData"
+    # Static Controller inits
     track_data_controller = TrackDataController(
         ac.getTrackName(0), ac.getTrackConfiguration(0)
     )
-    event_data = _get_event_data()
-    event_controller = EventController(event_data)
     return "pData"
 
 
