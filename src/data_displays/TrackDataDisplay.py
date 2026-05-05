@@ -1,8 +1,8 @@
 import ac  # type: ignore
 from src.plogging import pLogger
 
-RED = (1.0, 0.2, 0.2)
-GREEN = (0.2, 1.0, 0.2)
+RED = (1.0, 0.2, 0.2, 1.0)
+GREEN = (0.2, 1.0, 0.2, 1.0)
 
 _MARGIN = 10
 _LABEL_W = 180
@@ -55,7 +55,7 @@ class TrackDataDisplay:
             ac.setSize(status, _STATUS_W, _ROW_H)
             ac.setFontSize(status, 14)
             ac.setFontAlignment(status, "center")
-            ac.setFontColor(status, *RED, 1.0)
+            ac.setFontColor(status, *RED)
             self._status_labels.append(status)
 
         button_y = _MARGIN + _HEADER_H + (len(_ROW_LABELS) * _ROW_H) + _MARGIN
@@ -69,10 +69,10 @@ class TrackDataDisplay:
         label = self._status_labels[index]
         if ok:
             ac.setText(label, "OK")
-            ac.setFontColor(label, *GREEN, 1.0)
+            ac.setFontColor(label, *GREEN)
         else:
             ac.setText(label, "KO")
-            ac.setFontColor(label, *RED, 1.0)
+            ac.setFontColor(label, *RED)
 
     def _on_upload_clicked(self, *args):
         self._on_upload()
