@@ -32,6 +32,8 @@ class TrackDataController:
         self._load_map_details()
         # TODO: Add Section Data
         self.display.set_state(self.local_state)
+
+        
     @property
     def track_id(self):
         return "{}_{}".format(self.track, self.variant) if self.variant else self.track
