@@ -20,7 +20,9 @@ class TrackDataController:
         # type: (str, str | None) -> None
         self.track = track
         self.variant = variant
+        
         self.root_track_dir = os.path.join(os.getcwd(), "content", "tracks", self.track)
+        self.variant_dir = "layout_{}".format(self.variant) if self.variant and self.variant.startswith('ks_') else self.variant
 
         self.track_details = None  # type: TrackConfigData | None
         self.map_details = None  # type: MapConfigData | None
@@ -55,8 +57,8 @@ class TrackDataController:
     def _load_track_details(self):
         track_ui_path = (
             os.path.join(self.root_track_dir, "ui")
-            if not self.track
-            else os.path.join(self.root_track_dir, "ui", self.track)
+            if not self.variant_dir
+            else os.path.join(self.root_track_dir, "ui", self.variant_dir)
         )
         ui_ini_path = os.path.join(track_ui_path, "ui_track.json")
         try:
@@ -70,8 +72,8 @@ class TrackDataController:
     def _load_map_details(self):
         try:
             track_dir = (
-                os.path.join(self.root_track_dir, self.track)
-                if self.track
+                os.path.join(self.root_track_dir, self.variant_dir)
+                if self.variant_dir
                 else self.root_track_dir
             )
             map_ini_path = os.path.join(track_dir, "data", "map.ini")
