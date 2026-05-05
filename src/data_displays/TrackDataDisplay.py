@@ -31,7 +31,7 @@ class TrackDataDisplay:
     def __init__(self, on_upload):
         # type: (TrackDataDisplay, callable) -> None # type: ignore
         self._on_upload = on_upload
-        self.rows = {} # type: dict[str, tuple[str, object]]
+        self.rows = {} # type: dict[str, tuple[object, object]]
         self._setup_ui()
 
     def set_state(self, state):
@@ -45,7 +45,7 @@ class TrackDataDisplay:
 
     def set_complete(self):
         self._set_action_state(ACTION_STATE.COMPLETE)
-        
+
     def set_error(self):
         self._set_action_state(ACTION_STATE.ERROR)
 
@@ -58,14 +58,9 @@ class TrackDataDisplay:
         ac.drawBorder(self.app, 0)
         ac.setIconPosition(self.app, -10000, -10000)
         draw_y = _MARGIN 
-
-        header = ac.addLabel(self.app, "Track Data")
-        ac.setPosition(header, _MARGIN, draw_y)
-        draw_y += _HEADER_H
-        ac.setSize(header, _LABEL_W + _STATUS_W, _HEADER_H)
-        ac.setFontSize(header, 18)
-        ac.setFontColor(header, 1.0, 1.0, 1.0, 1.0)
-        draw_y += _MARGIN
+        
+        self._create_label("Track Data", draw_y, _FULL_W, _HEADER_H, font_size=18)
+        draw_y += _HEADER_H + _MARGIN
 
         for id, label in TrackDataState.value_labels.items():
             self._add_row(draw_y, id, label)
@@ -101,13 +96,13 @@ class TrackDataDisplay:
 
 
     # TODO: Consider yanking this
-    def _create_label(self, text, y, width = _FULL_W, height=_BUTTON_H, color = None, font_size = 14, font_alignment = 'center'):
-        # type: (str, int, int, int, tuple[float, float, float, float] | None, int, str)-> object
+    def _create_label(self, text, y, x = _MARGIN, width = _FULL_W, height=_BUTTON_H, color = None, font_size = 14, font_alignment = 'center'):
+        # type: (str, int, int, int, int, tuple[float, float, float, float] | None, int, str)-> object
         label = ac.addLabel(self.app, text)
         ac.setSize(label, width, height)
         ac.setFontSize(label, font_size)
         ac.setFontAlignment(label, font_alignment)
-        ac.setPosition(label, _MARGIN, y)
+        ac.setPosition(label, x, y)
         if color:
             ac.setFontColor(label, *color)
         return label
@@ -115,19 +110,12 @@ class TrackDataDisplay:
     def _add_row(self, row_y, row_id, row_label_text, row_local_value=None):
         # type: (int, str, str, bool | None) -> None
         # Create friendly label
-        row_label = ac.addLabel(self.app, row_label_text)
-        ac.setPosition(row_label, _MARGIN, row_y)
-        ac.setSize(row_label, _LABEL_W, _ROW_H)
-        ac.setFontSize(row_label, 14)
+        row_label = self._create_label(row_label_text, row_y, _MARGIN, _LABEL_W, _ROW_H, font_size=14)
         
         # Create Local State Label
         local_col_x = 2 * _MARGIN + _LABEL_W
-        status_label_local = ac.addLabel(self.app, "-")
+        status_label_local = self._create_label("-", row_y, x=local_col_x, width=_STATUS_W, height=_ROW_H)
         self._set_label_value(status_label_local, row_local_value)
-        ac.setPosition(status_label_local, local_col_x, row_y)
-        ac.setSize(status_label_local, _STATUS_W, _ROW_H)
-        ac.setFontSize(status_label_local, 14)
-        ac.setFontAlignment(status_label_local, "center")
 
         # Register this label
         self.rows[row_id] = (row_label, status_label_local,)
