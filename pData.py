@@ -105,8 +105,8 @@ def acShutdown():
         log("Closing non-live session")
         return
     if not event_controller:
-        raise ACException("Event Controller not initialised")
-
+        log("No Event Controller to close")
+        return
     event_controller.close()
     stop_worker()
     log("[ac] Waiting for {} open threads...".format(threading.active_count()))
