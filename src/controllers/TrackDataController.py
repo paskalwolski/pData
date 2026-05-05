@@ -8,7 +8,7 @@ import traceback
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, TrackConfigData, TrackDataRequest, TrackDataState
+from src.models import MapConfigData, TrackConfigData, TrackRequest, TrackDataState
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -33,7 +33,7 @@ class TrackDataController:
         # TODO: Add Section Data
         self.display.set_state(self.local_state)
 
-        
+
     @property
     def track_id(self):
         return "{}_{}".format(self.track, self.variant) if self.variant else self.track
@@ -98,7 +98,8 @@ class TrackDataController:
         return base64.b64encode(image_bytes).decode("utf-8")
 
     def _upload_track_data(self):
-        payload = TrackDataRequest(
+        self.display.set_uploading()
+        payload = TrackRequest(
             self.track_id,
             self.track_details,
             self.map_details,
@@ -108,8 +109,10 @@ class TrackDataController:
             api_client.post_track_data(payload)
         except APIException as e:
             log("Failed Track Data Upload", traceback.format_exception(e))
+            self.display.set_error()
             return
         log("Completed Track Data Upload: {}".format(self.track_id))
+        self.display.set_complete()
 
     @property
     def local_state(self):

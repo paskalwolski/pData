@@ -208,9 +208,20 @@ class MapConfigData:
         self.margin = margin
         self.image_path = image_path
 
-class TrackDataRequest(BaseRequestModel):
+class TrackRequest(BaseRequestModel):
     _json_field_names = {
         "track_id": "trackId",
+        "track_data": "trackData", 
+    }
+
+    def __init__(self, track_id, track_details, map_details, map_image_data=None):
+        # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
+        self.track_id = track_id
+        self.track_data = TrackDataRequest(track_details, map_details, map_image_data)
+        
+
+class TrackDataRequest(BaseRequestModel):
+    _json_field_names = {
         "track_name": "trackName",
         "width": "width",
         "height": "height",
@@ -220,9 +231,8 @@ class TrackDataRequest(BaseRequestModel):
         "image": "image",
     }
 
-    def __init__(self, track_id, track_details, map_details, map_image_data=None):
-        # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
-        self.track_id = track_id
+    def __init__(self, track_details, map_details, map_image_data):
+        # type: (TrackConfigData | None, MapConfigData | None, str | None) -> None
         if track_details:
             self.track_name = track_details.track_name
         if map_details:

@@ -3,12 +3,12 @@ import json
 import requests
 
 
-from src.models import LapDataRequest, TrackDataRequest
+from src.models import LapDataRequest, TrackRequest
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
 SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
-TRACK_POST_URL = ""
+TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
 
 HEADERS = {"Content-Type": "application/json"}
 
@@ -58,7 +58,7 @@ def close_session(session_payload):
 
 
 def post_track_data(track_data_request):
-    # type: (TrackDataRequest) -> None
+    # type: (TrackRequest) -> None
     res = _post(TRACK_POST_URL, track_data_request.to_json())
     if not res.ok:
         raise APIException("Error Posting Track Data: {}".format(res.status_code))
