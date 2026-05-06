@@ -23,7 +23,7 @@ from sim_info import info
 from src.DataUploader import stop_worker
 from src.plogging import pLogger
 from src.controllers import EventController, TrackDataController
-from src.models import EventData, Telemetry, UpdatePayload, LapPayload
+from src.models import EventData, Telemetry, UpdateData, LapData
 
 
 SESSION_LUT = (
@@ -114,7 +114,7 @@ def acShutdown():
 
 
 def _get_update_payload(distance):
-    # type: (int) -> UpdatePayload
+    # type: (int) -> UpdateData
     session_label = SESSION_LUT[info.graphics.session][1]
     lap_number = info.graphics.completedLaps + 1
     last_lap_time = ac.getCarState(0, acsys.CS.LastLap)
@@ -146,7 +146,7 @@ def _get_update_payload(distance):
         pos_z=pos[2],
         ers=ers,
     )
-    lap_data_payload = LapPayload(
+    lap_data_payload = LapData(
         lap_number=lap_number,
         telemetry=meter_telemetry,
         invalid=invalid,
@@ -154,7 +154,7 @@ def _get_update_payload(distance):
         last_lap_time=last_lap_time,
     )
 
-    return UpdatePayload(session=session_label, lap_data=lap_data_payload)
+    return UpdateData(session=session_label, lap_data=lap_data_payload)
 
 
 def _get_event_data():

@@ -3,7 +3,7 @@ import json
 import requests
 
 
-from src.models import LapDataRequest, TrackRequest
+from src.models import LapPayload, TrackPayload
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
@@ -14,7 +14,7 @@ HEADERS = {"Content-Type": "application/json"}
 
 
 def post_lap(lap_data_request):
-    # type: (LapDataRequest) -> tuple[str, str | None]
+    # type: (LapPayload) -> tuple[str, str | None]
     """
     Handle a valid Lap that needs to be stored.
 
@@ -58,7 +58,7 @@ def close_session(session_payload):
 
 
 def post_track_data(track_data_request):
-    # type: (TrackRequest) -> None
+    # type: (TrackPayload) -> None
     res = _post(TRACK_POST_URL, track_data_request.to_json())
     if not res.ok:
         raise APIException("Error Posting Track Data: {}".format(res.status_code))

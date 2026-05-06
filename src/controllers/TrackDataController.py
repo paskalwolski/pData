@@ -8,7 +8,7 @@ import traceback
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, TrackConfigData, TrackRequest, TrackDataState
+from src.models import MapConfigData, TrackConfigData, TrackPayload, TrackDataState
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -99,7 +99,7 @@ class TrackDataController:
 
     def _upload_track_data(self):
         self.display.set_uploading()
-        payload = TrackRequest(
+        payload = TrackPayload(
             self.track_id,
             self.track_details,
             self.map_details,

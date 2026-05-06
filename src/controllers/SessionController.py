@@ -2,7 +2,7 @@ from datetime import datetime
 
 from src.worker import worker
 from src.controllers.LapController import LapController
-from src.models import EventData, SessionData, UpdatePayload
+from src.models import EventData, SessionData, UpdateData
 from src.plogging import pLogger
 from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
 from src.data_displays.LapStatus import lap_status_display
@@ -26,7 +26,7 @@ class SessionController:
         logger.log("Session Ready")
 
     def update(self, payload):
-        # type: (UpdatePayload) -> None
+        # type: (UpdateData) -> None
         if not self.lap:
             self.lap = LapController(
                 self.session_data, payload.lap_data.lap_number, self.register_lap

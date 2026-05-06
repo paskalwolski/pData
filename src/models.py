@@ -5,7 +5,7 @@ import json
 # pylint: disable=R0913
 
 
-class BaseRequestModel:
+class BaseRequestPayload:
     """
     ABC that is used for data structures in outgoing requests which
     provides serialisation logic for camelCase network structures
@@ -18,7 +18,7 @@ class BaseRequestModel:
         for f, j in self._json_field_names.items():
             v = getattr(self, f, None)
             if v is not None:
-                d[j] = v.to_dict() if isinstance(v, BaseRequestModel) else v
+                d[j] = v.to_dict() if isinstance(v, BaseRequestPayload) else v
         return d
 
     def to_json(self):
@@ -76,7 +76,7 @@ class Telemetry:
         return telemetry_object
 
 
-class SessionData(BaseRequestModel):
+class SessionData(BaseRequestPayload):
     _json_field_names = {"event_data"}
 
     def __init__(self, event_data, session, session_timestamp, remote_session_id):
@@ -87,9 +87,9 @@ class SessionData(BaseRequestModel):
         self.remote_session_id = remote_session_id
 
 
-class LapPayload:
+class LapData:
     def __init__(self, *, lap_number, telemetry, invalid, in_pit, last_lap_time=None):
-        # type: (LapPayload, int, Telemetry, bool, bool, float | None) -> None
+        # type: (LapData, int, Telemetry, bool, bool, float | None) -> None
         self.lap_number = lap_number
         self.telemetry = telemetry
 
@@ -98,9 +98,9 @@ class LapPayload:
         self.last_lap_time = last_lap_time
 
 
-class UpdatePayload:
+class UpdateData:
     def __init__(self, session, lap_data):
-        # type: (UpdatePayload, str, LapPayload) -> None
+        # type: (UpdateData, str, LapData) -> None
         self.session = session
         self.lap_data = lap_data
 
@@ -114,7 +114,7 @@ class EventData:
         self.car = car
 
 
-class SessionDataRequest(BaseRequestModel):
+class SessionPayload(BaseRequestPayload):
     _json_field_names = {
         "driver": "driver",
         "car": "car",
@@ -132,7 +132,7 @@ class SessionDataRequest(BaseRequestModel):
         self.session_type = sessionData.session
 
 
-class LapDataRequest(BaseRequestModel):
+class LapPayload(BaseRequestPayload):
     _json_field_names = {
         "lap_number": "lapNumber",
         "lap_time": "lapTime",
@@ -155,7 +155,7 @@ class LapDataRequest(BaseRequestModel):
         self.is_pit = is_pit
         self.discard = discard
         self.lap_data = lap_data
-        self.session_data = SessionDataRequest(session_data)
+        self.session_data = SessionPayload(session_data)
 
 
 class TrackDataState:
@@ -208,7 +208,7 @@ class MapConfigData:
         self.margin = margin
         self.image_path = image_path
 
-class TrackRequest(BaseRequestModel):
+class TrackPayload(BaseRequestPayload):
     _json_field_names = {
         "track_id": "trackId",
         "track_data": "trackData", 
@@ -217,10 +217,10 @@ class TrackRequest(BaseRequestModel):
     def __init__(self, track_id, track_details, map_details, map_image_data=None):
         # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
         self.track_id = track_id
-        self.track_data = TrackDataRequest(track_details, map_details, map_image_data)
+        self.track_data = TrackDataPayload(track_details, map_details, map_image_data)
         
 
-class TrackDataRequest(BaseRequestModel):
+class TrackDataPayload(BaseRequestPayload):
     _json_field_names = {
         "track_name": "trackName",
         "width": "width",

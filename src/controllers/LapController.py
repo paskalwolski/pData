@@ -1,7 +1,7 @@
 import traceback
 
 from src.plogging import pLogger
-from src.models import LapDataRequest, LapPayload, Telemetry, UpdatePayload, SessionData
+from src.models import LapPayload, LapData, Telemetry, UpdateData, SessionData
 from src.worker import worker
 from src.data_displays import lap_status_display
 from src.exceptions import (
@@ -35,7 +35,7 @@ class LapController:
         log("Lap {} Ready".format(lap_number))
 
     def update(self, payload):
-        # type: (UpdatePayload) -> None
+        # type: (UpdateData) -> None
         self._check_lap_boundary(payload.lap_data)
         self._check_for_discard(payload.lap_data)
         # Track this telemetry point
@@ -70,7 +70,7 @@ class LapController:
     def _close_process(self, last_lap_time):
         # type: (float) -> None
         telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
-        lap_data_request = LapDataRequest(
+        lap_data_request = LapPayload(
             self.lap_number,
             last_lap_time,
             not self.is_invalid,
@@ -89,7 +89,7 @@ class LapController:
         log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
     def _check_lap_boundary(self, lap_data):
-        # type: (LapPayload) -> None
+        # type: (LapData) -> None
         lap = lap_data.lap_number
         if not lap:
             raise InvalidBundle()
@@ -105,7 +105,7 @@ class LapController:
             )
 
     def _check_for_discard(self, lap_data):
-        # type: (LapPayload) -> None
+        # type: (LapData) -> None
         if lap_data.in_pit:
             self.is_pit = True
         if lap_data.invalid:

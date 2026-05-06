@@ -4,7 +4,7 @@ from src.plogging import pLogger
 
 from src.worker import worker
 
-from src.models import EventData, UpdatePayload
+from src.models import EventData, UpdateData
 
 log = pLogger(__name__).log
 
@@ -18,7 +18,7 @@ class EventController:
         log("Event Controller Ready")
 
     def update(self, payload):
-        # type: (UpdatePayload) -> None
+        # type: (UpdateData) -> None
         """Take a full game tick bundle, and direct it towards the appropriate session"""
 
         if not self.session:
