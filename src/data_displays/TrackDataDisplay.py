@@ -38,7 +38,9 @@ class TrackDataDisplay:
         # type: (int, TrackDataState) -> None
         for id, row_state in state.items():
            self._set_row_state(id, column, row_state)
-        self._set_action_state(ACTION_STATE.READY if state.ready else ACTION_STATE.DISABLED)
+        if column == 1:
+            # Trigger action change when we update the local state
+            self._set_action_state(ACTION_STATE.READY if state.ready else ACTION_STATE.DISABLED)
 
     def set_uploading(self):
         self._set_action_state(ACTION_STATE.UPLOADING)
@@ -82,7 +84,7 @@ class TrackDataDisplay:
         # Create Upload Button
         ready = self.upload_btn = ac.addButton(self.app, "Upload")
         ac.setPosition(self.upload_btn, _MARGIN, y)
-        ac.setSize(self.upload_btn, _LABEL_W + _MARGIN + _STATUS_W, _BUTTON_H)
+        ac.setSize(self.upload_btn, _FULL_W, _BUTTON_H)
         # Create closure function here, so we can correctly assign it to the button
         def on_upload_clicked(*_):
             self._on_upload()
