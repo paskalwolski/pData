@@ -8,7 +8,7 @@ import traceback
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, TrackConfigData, TrackPayload, TrackDataState
+from src.models import MapConfigData, RequestTrackPayload, RequestTrackResponse, TrackConfigData, TrackPayload, TrackDataState
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -28,6 +28,8 @@ class TrackDataController:
         self.track_details = None  # type: TrackConfigData | None
         self.map_details = None  # type: MapConfigData | None
 
+        self.fire_get_track_data()
+
         self._load_track_details()
         self._load_map_details()
         # TODO: Add Section Data
@@ -43,7 +45,7 @@ class TrackDataController:
         if not self.local_state.ready:
             log("Unable to upload Track data: Missing Data")
             return
-        worker.enqueue(self._upload_track_data)
+        worker.enqueue(self._upload_track_data_process)
         log("Fired Track Data Upload: {}".format(self.track_id))
 
     def _load_track_details(self):
@@ -60,6 +62,11 @@ class TrackDataController:
                 self.track_details = TrackConfigData(track_name=track_details["name"])
         except (FileNotFoundError, json.JSONDecodeError):
             log("Unable to read Track Details", traceback.format_exc())
+
+    def fire_get_track_data(self):
+        worker.enqueue(self._get_track_data_process)
+        log("Fired Track Data Fetch: {}".format(self.track_id))
+
 
     def _load_map_details(self):
         try:
@@ -86,7 +93,7 @@ class TrackDataController:
         except (configparser.ParsingError, KeyError, FileNotFoundError):
             log("Unable to read map data", traceback.format_exc())
 
-    def _process_map_image(self):
+    def _prepare_map_image(self):
         # type: () -> str | None
         """Return the Map Image as a B64 encoded string, if it exists"""
         image_path = getattr(self.map_details, "image_path", None)
@@ -97,13 +104,13 @@ class TrackDataController:
             image_bytes = f.read()
         return base64.b64encode(image_bytes).decode("utf-8")
 
-    def _upload_track_data(self):
+    def _upload_track_data_process(self):
         self.display.set_uploading()
         payload = TrackPayload(
             self.track_id,
             self.track_details,
             self.map_details,
-            self._process_map_image(),
+            self._prepare_map_image(),
         )
         try:
             api_client.post_track_data(payload)
