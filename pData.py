@@ -101,13 +101,10 @@ def acUpdate(deltaT):  # pylint: disable=W0613
 
 def acShutdown():
     global event_controller
-    if info.graphics.status != 2:
-        log("Closing non-live session")
-        return
     if not event_controller:
         log("No Event Controller to close")
-        return
-    event_controller.close()
+    else:
+        event_controller.close()
     stop_worker()
     log("[ac] Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
