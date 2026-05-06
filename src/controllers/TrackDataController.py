@@ -48,6 +48,10 @@ class TrackDataController:
         worker.enqueue(self._upload_track_data_process)
         log("Fired Track Data Upload: {}".format(self.track_id))
 
+    def fire_get_track_data(self):
+        worker.enqueue(self._get_track_data_process)
+        log("Fired Track Data Fetch: {}".format(self.track_id))
+
     def _load_track_details(self):
         track_ui_path = (
             os.path.join(self.root_track_dir, "ui")
@@ -62,11 +66,6 @@ class TrackDataController:
                 self.track_details = TrackConfigData(track_name=track_details["name"])
         except (FileNotFoundError, json.JSONDecodeError):
             log("Unable to read Track Details", traceback.format_exc())
-
-    def fire_get_track_data(self):
-        worker.enqueue(self._get_track_data_process)
-        log("Fired Track Data Fetch: {}".format(self.track_id))
-
 
     def _load_map_details(self):
         try:
