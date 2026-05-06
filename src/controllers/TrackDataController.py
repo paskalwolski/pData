@@ -8,7 +8,7 @@ import traceback
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, RequestTrackPayload, RequestTrackResponse, TrackConfigData, TrackPayload, TrackDataState
+from src.models import MapConfigData, RequestTrackPayload, RequestTrackResponse, TrackConfigData, TrackDataPayload, TrackPayload, TrackDataState
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -129,14 +129,9 @@ class TrackDataController:
             self.display.set_state(2, remote_track_state)
         except APIException as e:
             log("Failed to get Track Data from Remote", traceback.format_exception(e))
-            self.display.set_state(2, TrackDataState(has_track_details=False, has_map_details=False, map_margin_ok=False, has_map=False))
+            self.display.set_state(2, TrackDataState.empty())
 
-    # TODO: Replace with a call to teh Model method instead
     @property
     def local_state(self):
         # type: () -> TrackDataState
-        has_track_details = bool(self.track_details)
-        has_map_details = bool(self.map_details)
-        map_margin_ok = self.map_details and math.floor(self.map_details.margin) == 10
-        has_map = self.map_details and self.map_details.image_path
-        return TrackDataState(has_track_details=has_track_details,has_map_details=has_map_details,map_margin_ok=map_margin_ok, has_map=has_map)
+        return TrackDataPayload(self.track_details, self.map_details, self._prepare_map_image()).as_state()
