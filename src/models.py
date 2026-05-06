@@ -13,19 +13,30 @@ class BaseRequestPayload:
 
     _json_field_names = {}
 
-    def to_dict(self):
+    def to_json_dict(self):
         d = {}
         for f, j in self._json_field_names.items():
             v = getattr(self, f, None)
             if v is not None:
-                d[j] = v.to_dict() if isinstance(v, BaseRequestPayload) else v
+                d[j] = v.to_json_dict() if isinstance(v, BaseRequestPayload) else v
         return d
 
     def to_json(self):
-        return json.dumps(self.to_dict())
+        return json.dumps(self.to_json_dict())
 
     def __getitem__(self, key):
         return getattr(self, key, None)
+
+    @classmethod
+    def from_json_dict(cls, json_dict, overrides=None):
+        effective_json_field_names = dict(cls._json_field_names)
+        if overrides:
+            effective_json_field_names.update(overrides)
+        instance = cls.__new__(cls)
+        for k, v in effective_json_field_names.items():
+            setattr(instance, k, json_dict.get(v) if json_dict else None)
+        return instance
+    
 
 
 # Telemetry: Static bundle containing the telemtry data for a single meter
