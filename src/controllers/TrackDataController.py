@@ -31,7 +31,7 @@ class TrackDataController:
         self._load_track_details()
         self._load_map_details()
         # TODO: Add Section Data
-        self.display.set_state(self.local_state)
+        self.display.set_state(1, self.local_state)
 
 
     @property
