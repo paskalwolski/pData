@@ -114,6 +114,17 @@ class TrackDataController:
         log("Completed Track Data Upload: {}".format(self.track_id))
         self.display.set_complete()
 
+    def _get_track_data_process(self):
+        payload = RequestTrackPayload(self.track_id)
+        try:
+            remote_data = api_client.check_track_data(payload)
+            remote_track_state = remote_data.track_data.as_state() if remote_data.exists else TrackDataState.empty()
+            self.display.set_state(2, remote_track_state)
+        except APIException as e:
+            log("Failed to get Track Data from Remote", traceback.format_exception(e))
+            self.display.set_state(2, TrackDataState(has_track_details=False, has_map_details=False, map_margin_ok=False, has_map=False))
+
+    # TODO: Replace with a call to teh Model method instead
     @property
     def local_state(self):
         # type: () -> TrackDataState

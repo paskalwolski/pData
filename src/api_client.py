@@ -2,16 +2,15 @@ import json
 
 import requests
 
-
-from src.models import LapPayload, TrackPayload
+from src.models import LapPayload, RequestTrackPayload, RequestTrackResponse, TrackPayload
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
 SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
+TRACK_CHECK_URL = "https://checktrackdata-3gpdongoba-uc.a.run.app"
 
 HEADERS = {"Content-Type": "application/json"}
-
 
 def post_lap(lap_data_request):
     # type: (LapPayload) -> tuple[str, str | None]
@@ -63,6 +62,17 @@ def post_track_data(track_data_request):
     if not res.ok:
         raise APIException("Error Posting Track Data: {}".format(res.status_code))
 
+
+def check_track_data(request_track_payload):
+    # type: (RequestTrackPayload) -> RequestTrackResponse
+    res = _post(TRACK_CHECK_URL, request_track_payload.to_json())
+    if not res.ok:
+        raise APIException("Error getting Track Data: {}".format(res.status_code))
+    try:
+        data = res.json()
+        return RequestTrackResponse(data)
+    except (ValueError, KeyError,) as e:
+        raise APIException("Malformed Response") from e
 
 def _post(url, data):
     # type: (str, str | None) -> requests.Response

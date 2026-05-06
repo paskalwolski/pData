@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import math
 
 # pylint: disable=line-too-long,R0902,R0913
 # pylint: disable=R0913
@@ -200,6 +201,15 @@ class TrackDataState:
            if not getattr(self, id, None):
                return False
         return True
+    
+    @classmethod
+    def empty(cls):
+        return TrackDataState(
+            has_track_details=False,
+            has_map_details=False,
+            map_margin_ok=False,
+            has_map=False
+        )
 
 class TrackConfigData:
     """Data grabbed from the Track config file"""
@@ -253,3 +263,35 @@ class TrackDataPayload(BaseRequestPayload):
             self.y_offset = map_details.y_offset
             self.margin = map_details.margin
         self.image = map_image_data
+
+    def as_state(self):
+        has_track_details = bool(self.track_name)
+        has_map_details = bool(self.width and self.height and self.x_offset and self.y_offset)
+        map_margin_ok = bool(self.margin and math.floor(self.margin) == 10)
+        has_map = bool(self.image)
+        return TrackDataState(
+            has_track_details=has_track_details, 
+            has_map_details=has_map_details,
+            map_margin_ok=map_margin_ok, 
+            has_map=has_map
+        )
+
+
+class RequestTrackPayload(BaseRequestPayload):
+    _json_field_names = {'track_id': 'trackId'}
+
+    def __init__(self, track_id):
+        # type: (str) -> None
+        self.track_id = track_id
+
+
+class RequestTrackResponse:
+    _json_field_names = {
+        'exists': 'exists',
+        "track_data": 'trackData'
+    }
+
+    def __init__(self, json_data):
+        # type: (dict) -> None
+        self.exists = bool(json_data.get('exists'))
+        self.track_data = TrackDataPayload.from_json_dict(json_data.get(self._json_field_names['track_data']), {'image': 'url'})
