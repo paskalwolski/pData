@@ -1,14 +1,20 @@
 import base64
 import configparser
 import json
-import math
 import os
 import traceback
 
 from src import api_client
 from src.exceptions import APIException
 from src.worker import worker
-from src.models import MapConfigData, RequestTrackPayload, RequestTrackResponse, TrackConfigData, TrackDataPayload, TrackPayload, TrackDataState
+from src.models import (
+    MapConfigData,
+    RequestTrackPayload,
+    TrackConfigData,
+    TrackDataPayload,
+    TrackPayload,
+    TrackDataState,
+)
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
 
@@ -21,9 +27,13 @@ class TrackDataController:
         self.display = TrackDataDisplay(self.fire_track_data_upload)
         self.track = track
         self.variant = variant
-        
+
         self.root_track_dir = os.path.join(os.getcwd(), "content", "tracks", self.track)
-        self.variant_dir = "layout_{}".format(self.variant) if self.variant and self.variant.startswith('ks_') else self.variant
+        self.variant_dir = (
+            "layout_{}".format(self.variant)
+            if self.variant and self.variant.startswith("ks_")
+            else self.variant
+        )
 
         self.track_details = None  # type: TrackConfigData | None
         self.map_details = None  # type: MapConfigData | None
@@ -35,11 +45,9 @@ class TrackDataController:
         # TODO: Add Section Data
         self.display.set_state(1, self.local_state)
 
-
     @property
     def track_id(self):
         return "{}_{}".format(self.track, self.variant) if self.variant else self.track
-
 
     def fire_track_data_upload(self):
         if not self.local_state.ready:
@@ -124,7 +132,11 @@ class TrackDataController:
         payload = RequestTrackPayload(self.track_id)
         try:
             remote_data = api_client.check_track_data(payload)
-            remote_track_state = remote_data.track_data.as_state() if remote_data.exists else TrackDataState.empty()
+            remote_track_state = (
+                remote_data.track_data.as_state()
+                if remote_data.exists
+                else TrackDataState.empty()
+            )
             self.display.set_state(2, remote_track_state)
         except APIException as e:
             log("Failed to get Track Data from Remote", traceback.format_exception(e))
@@ -133,4 +145,6 @@ class TrackDataController:
     @property
     def local_state(self):
         # type: () -> TrackDataState
-        return TrackDataPayload(self.track_details, self.map_details, self._prepare_map_image()).as_state()
+        return TrackDataPayload(
+            self.track_details, self.map_details, self._prepare_map_image()
+        ).as_state()

@@ -37,7 +37,6 @@ class BaseRequestPayload:
         for k, v in effective_json_field_names.items():
             setattr(instance, k, json_dict.get(v) if json_dict else None)
         return instance
-    
 
 
 # Telemetry: Static bundle containing the telemtry data for a single meter
@@ -171,45 +170,52 @@ class LapPayload(BaseRequestPayload):
 
 
 class TrackDataState:
-    track_details_id = 'track_details'
-    map_details_id = 'map_details'
-    map_present_id = 'map_present'
-    map_margin_id = 'map_margin_ok'
-    
+    track_details_id = "track_details"
+    map_details_id = "map_details"
+    map_present_id = "map_present"
+    map_margin_id = "map_margin_ok"
+
     value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id]
 
     value_labels = {
-            track_details_id: 'Track Details', 
-            map_details_id: "Map Details", 
-            map_present_id: "Map Image", 
-            map_margin_id: "Margin (10px)"
-        }
+        track_details_id: "Track Details",
+        map_details_id: "Map Details",
+        map_present_id: "Map Image",
+        map_margin_id: "Margin (10px)",
+    }
 
-    def __init__(self,*,has_track_details = None, has_map_details = None,map_margin_ok=None,has_map=None):
+    def __init__(
+        self,
+        *,
+        has_track_details=None,
+        has_map_details=None,
+        map_margin_ok=None,
+        has_map=None
+    ):
         setattr(self, self.track_details_id, has_track_details)
         setattr(self, self.map_details_id, has_map_details)
         setattr(self, self.map_present_id, has_map)
         setattr(self, self.map_margin_id, map_margin_ok)
 
-    
     def items(self):
-        return {id: getattr(self, id, None) for id in TrackDataState.value_ids}.items() # type: ignore
+        return {id: getattr(self, id, None) for id in TrackDataState.value_ids}.items()  # type: ignore
 
     @property
     def ready(self):
-        for id in self.value_ids:
-           if not getattr(self, id, None):
-               return False
+        for value_id in self.value_ids:
+            if not getattr(self, value_id, None):
+                return False
         return True
-    
+
     @classmethod
     def empty(cls):
         return TrackDataState(
             has_track_details=False,
             has_map_details=False,
             map_margin_ok=False,
-            has_map=False
+            has_map=False,
         )
+
 
 class TrackConfigData:
     """Data grabbed from the Track config file"""
@@ -229,17 +235,18 @@ class MapConfigData:
         self.margin = margin
         self.image_path = image_path
 
+
 class TrackPayload(BaseRequestPayload):
     _json_field_names = {
         "track_id": "trackId",
-        "track_data": "trackData", 
+        "track_data": "trackData",
     }
 
     def __init__(self, track_id, track_details, map_details, map_image_data=None):
         # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
         self.track_id = track_id
         self.track_data = TrackDataPayload(track_details, map_details, map_image_data)
-        
+
 
 class TrackDataPayload(BaseRequestPayload):
     _json_field_names = {
@@ -266,19 +273,21 @@ class TrackDataPayload(BaseRequestPayload):
 
     def as_state(self):
         has_track_details = bool(self.track_name)
-        has_map_details = bool(self.width and self.height and self.x_offset and self.y_offset)
+        has_map_details = bool(
+            self.width and self.height and self.x_offset and self.y_offset
+        )
         map_margin_ok = bool(self.margin and math.floor(self.margin) == 10)
         has_map = bool(self.image)
         return TrackDataState(
-            has_track_details=has_track_details, 
+            has_track_details=has_track_details,
             has_map_details=has_map_details,
-            map_margin_ok=map_margin_ok, 
-            has_map=has_map
+            map_margin_ok=map_margin_ok,
+            has_map=has_map,
         )
 
 
 class RequestTrackPayload(BaseRequestPayload):
-    _json_field_names = {'track_id': 'trackId'}
+    _json_field_names = {"track_id": "trackId"}
 
     def __init__(self, track_id):
         # type: (str) -> None
@@ -286,12 +295,11 @@ class RequestTrackPayload(BaseRequestPayload):
 
 
 class RequestTrackResponse:
-    _json_field_names = {
-        'exists': 'exists',
-        "track_data": 'trackData'
-    }
+    _json_field_names = {"exists": "exists", "track_data": "trackData"}
 
     def __init__(self, json_data):
         # type: (dict) -> None
-        self.exists = bool(json_data.get('exists'))
-        self.track_data = TrackDataPayload.from_json_dict(json_data.get(self._json_field_names['track_data']), {'image': 'url'})
+        self.exists = bool(json_data.get("exists"))
+        self.track_data = TrackDataPayload.from_json_dict(
+            json_data.get(self._json_field_names["track_data"]), {"image": "url"}
+        )
