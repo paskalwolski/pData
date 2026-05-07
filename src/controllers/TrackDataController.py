@@ -29,11 +29,6 @@ class TrackDataController:
         self.variant = variant
 
         self.root_track_dir = os.path.join(os.getcwd(), "content", "tracks", self.track)
-        self.variant_dir = (
-            "layout_{}".format(self.variant)
-            if self.variant and self.variant.startswith("ks_")
-            else self.variant
-        )
 
         self.track_details = None  # type: TrackConfigData | None
         self.map_details = None  # type: MapConfigData | None
@@ -43,7 +38,7 @@ class TrackDataController:
             self._load_track_details()
             self._load_map_details()
             # TODO: Add Section Data
-        except Exception as e: # pylint: disable=W0718
+        except Exception as e:  # pylint: disable=W0718
             log("Error initing Track Details", traceback.format_exception(e))
 
         self.display.set_state(1, self.local_state)
@@ -65,9 +60,9 @@ class TrackDataController:
 
     def _load_track_details(self):
         track_ui_path = (
-            os.path.join(self.root_track_dir, "ui")
-            if not self.variant_dir
-            else os.path.join(self.root_track_dir, "ui", self.variant_dir)
+            os.path.join(self.root_track_dir, "ui", self.variant)
+            if self.variant
+            else os.path.join(self.root_track_dir, "ui")
         )
         ui_ini_path = os.path.join(track_ui_path, "ui_track.json")
         try:
@@ -81,8 +76,8 @@ class TrackDataController:
     def _load_map_details(self):
         try:
             track_dir = (
-                os.path.join(self.root_track_dir, self.variant_dir)
-                if self.variant_dir
+                os.path.join(self.root_track_dir, self.variant)
+                if self.variant
                 else self.root_track_dir
             )
             map_ini_path = os.path.join(track_dir, "data", "map.ini")
