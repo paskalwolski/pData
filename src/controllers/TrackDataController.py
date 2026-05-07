@@ -39,10 +39,13 @@ class TrackDataController:
         self.map_details = None  # type: MapConfigData | None
 
         self.fire_get_track_data()
+        try:
+            self._load_track_details()
+            self._load_map_details()
+            # TODO: Add Section Data
+        except Exception as e: # pylint: disable=W0718
+            log("Error initing Track Details", traceback.format_exception(e))
 
-        self._load_track_details()
-        self._load_map_details()
-        # TODO: Add Section Data
         self.display.set_state(1, self.local_state)
 
     @property
