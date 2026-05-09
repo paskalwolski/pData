@@ -66,6 +66,10 @@ def post_track_data(track_data_request):
 def check_track_data(request_track_payload):
     # type: (RequestTrackPayload) -> RequestTrackResponse
     res = _post(TRACK_CHECK_URL, request_track_payload.to_json())
+    if res.status_code == 204:
+        # Explicitly Catch Track Not Found
+        # Return Empty Response
+        return RequestTrackResponse()
     if not res.ok:
         raise APIException("Error getting Track Data: {}".format(res.status_code))
     try:

@@ -297,9 +297,9 @@ class RequestTrackPayload(BaseRequestPayload):
 class RequestTrackResponse:
     _json_field_names = {"exists": "exists", "track_data": "trackData"}
 
-    def __init__(self, json_data):
+    def __init__(self, json_data = {}):
         # type: (dict) -> None
-        self.exists = bool(json_data.get("exists"))
+        self.exists = bool(json_data.get("exists", None))
         self.track_data = TrackDataPayload.from_json_dict(
             json_data.get(self._json_field_names["track_data"]), {"image": "url"}
         )
