@@ -38,8 +38,8 @@ class TrackDataController:
             self._load_track_details()
             self._load_map_details()
             # TODO: Add Section Data
-        except Exception as e:  # pylint: disable=W0718
-            log("Error initing Track Details", traceback.format_exception(e))
+        except Exception:  # pylint: disable=W0718
+            log("Error initing Track Details", traceback.format_exc())
 
         self.display.set_state(1, self.local_state)
 
@@ -119,8 +119,8 @@ class TrackDataController:
         )
         try:
             api_client.post_track_data(payload)
-        except APIException as e:
-            log("Failed Track Data Upload", traceback.format_exception(e))
+        except APIException:
+            log("Failed Track Data Upload", traceback.format_exc())
             self.display.set_error()
             return
         log("Completed Track Data Upload: {}".format(self.track_id))
@@ -136,8 +136,8 @@ class TrackDataController:
                 else TrackDataState.empty()
             )
             self.display.set_state(2, remote_track_state)
-        except APIException as e:
-            log("Failed to get Track Data from Remote", traceback.format_exception(e))
+        except APIException:
+            log("Failed to get Track Data from Remote", traceback.format_exc())
             self.display.set_state(2, TrackDataState.empty())
 
     @property
