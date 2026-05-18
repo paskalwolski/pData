@@ -4,7 +4,7 @@ import traceback
 
 from src.plogging import pLogger
 
-log = pLogger(__name__).log
+log = pLogger(__name__).worker_log
 
 
 class Worker:
@@ -30,8 +30,8 @@ class Worker:
                 break
             try:
                 task()
-            except Exception:
-                log("Worker error: {}".format(traceback.format_exc()))
+            except BaseException:
+                log(traceback.format_exc())
 
 
 worker = Worker()
