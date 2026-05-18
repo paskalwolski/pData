@@ -23,7 +23,7 @@ class Worker:
         for t in threading.enumerate():
             log(t.name, t.is_alive())
         self._thread.join()
-        log("Worker stopped")
+        log("Stopped")
 
     def _run(self):
         while True:
@@ -32,7 +32,7 @@ class Worker:
                 break
             try:
                 task()
-            except BaseException:
+            except:  # pylint: disable=W0702
                 log(traceback.format_exc())
 
 
