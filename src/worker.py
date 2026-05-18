@@ -20,6 +20,8 @@ class Worker:
 
     def stop(self):
         self._queue.put(None)
+        for t in threading.enumerate():
+            log(t.name, t.is_alive())
         self._thread.join()
         log("Worker stopped")
 
