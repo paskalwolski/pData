@@ -41,6 +41,8 @@ class TrackDataDisplay:
         # type: (TrackDataDisplay, callable) -> None # type: ignore
         self._on_upload = on_upload
         self.rows = {}  # type: dict[str, tuple[object, object, object]]
+        self.actions = {}
+        self._upload_click_cb = lambda: None
         self._setup_ui()
 
     def set_state(self, column, state):
