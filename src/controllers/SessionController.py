@@ -63,7 +63,7 @@ class SessionController:
         if not session_id:
             logger.log("No Session Update for lap {}".format(lap_id))
             return
-        if self.remote_session_id:
+        if self.remote_session_id and self.remote_session_id != session_id:
             logger.log("Failed trying to update session {} with new id {}".format(self.remote_session_id, session_id))
             return
         
