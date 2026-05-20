@@ -106,7 +106,6 @@ def acShutdown():
     else:
         event_controller.close()
     stop_worker()
-    log("[ac] Waiting for {} open threads...".format(threading.active_count()))
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):
             log("[ac] Waiting for thread {}".format(thread.name))
