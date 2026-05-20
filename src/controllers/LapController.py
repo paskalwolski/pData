@@ -81,8 +81,8 @@ class LapController:
         )
         try:
             lap_id, session_id = api_client.post_lap(lap_data_request)
-        except APIException as e:
-            log("Failed Lap Upload", traceback.format_exception(e))
+        except APIException:
+            log("Failed Lap Upload", traceback.format_exc())
             return
         if not self.discard:
             self.register_lap_with_session(lap_id, session_id)
