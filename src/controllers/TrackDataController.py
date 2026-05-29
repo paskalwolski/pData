@@ -14,6 +14,7 @@ from src.models import (
     TrackDataPayload,
     TrackPayload,
     TrackDataState,
+    TrackSectionData,
 )
 from src.plogging import pLogger
 from src.data_displays.TrackDataDisplay import TrackDataDisplay
@@ -37,7 +38,9 @@ class TrackDataController:
         try:
             self._load_track_details()
             self._load_map_details()
-            # TODO: Add Section Data
+            self._load_section_details()
+
+            log(self.section_data)
         except Exception:  # pylint: disable=W0718
             log("Error initing Track Details", traceback.format_exc())
 
@@ -98,6 +101,30 @@ class TrackDataController:
         except (configparser.ParsingError, KeyError, FileNotFoundError):
             log("Unable to read map data", traceback.format_exc())
 
+    def _load_section_details(self):
+        try:
+            section_file_path = os.path.join(self.track_dir, 'data', 'sections.ini')
+            cp = configparser.ConfigParser()
+            try:
+                cp.read(section_file_path)
+            except (configparser.Error, FileNotFoundError):
+                log("Track does not have section data")
+                self.section_data = []
+                return
+            sections = []
+            for section in cp.sections():
+                section_data = cp[section]
+                section_details = TrackSectionData(
+                    section_data['TEXT'],
+                    float(section_data['IN']),
+                    float(section_data['OUT']),
+                )
+                sections.append(section_details)
+            self.section_data = sections
+        except Exception as e:
+            log('Unable to read section data', traceback.format_exc())
+            self.section_data = []
+
     def _prepare_map_image(self):
         # type: () -> str | None
         """Return the Map Image as a B64 encoded string, if it exists"""
@@ -144,5 +171,15 @@ class TrackDataController:
     def local_state(self):
         # type: () -> TrackDataState
         return TrackDataPayload(
-            self.track_details, self.map_details, self._prepare_map_image()
+            self.track_details, self.map_details, self._prepare_map_image(), self.section_data
         ).as_state()
+    
+    @property
+    def track_dir(self):
+        return (
+            os.path.join(
+                self.root_track_dir, self.variant
+            ) 
+            if self.variant 
+            else self.root_track_dir
+        )

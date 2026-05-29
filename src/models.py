@@ -174,14 +174,17 @@ class TrackDataState:
     map_details_id = "map_details"
     map_present_id = "map_present"
     map_margin_id = "map_margin_ok"
+    section_data_id = "section_data"
 
-    value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id]
+    value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id, section_data_id]
+    required_value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id]
 
     value_labels = {
         track_details_id: "Track Details",
         map_details_id: "Map Details",
         map_present_id: "Map Image",
         map_margin_id: "Margin (10px)",
+        section_data_id: "[Track Sections]"
     }
 
     def __init__(
@@ -190,19 +193,21 @@ class TrackDataState:
         has_track_details=None,
         has_map_details=None,
         map_margin_ok=None,
-        has_map=None
+        has_map=None,
+        has_sections=None
     ):
         setattr(self, self.track_details_id, has_track_details)
         setattr(self, self.map_details_id, has_map_details)
         setattr(self, self.map_present_id, has_map)
         setattr(self, self.map_margin_id, map_margin_ok)
+        setattr(self, self.section_data_id, has_sections)
 
     def items(self):
         return {id: getattr(self, id, None) for id in TrackDataState.value_ids}.items()  # type: ignore
 
     @property
     def ready(self):
-        for value_id in self.value_ids:
+        for value_id in self.required_value_ids:
             if not getattr(self, value_id, None):
                 return False
         return True
@@ -214,6 +219,7 @@ class TrackDataState:
             has_map_details=False,
             map_margin_ok=False,
             has_map=False,
+            has_sections=False,
         )
 
 
@@ -235,6 +241,13 @@ class MapConfigData:
         self.margin = margin
         self.image_path = image_path
 
+class TrackSectionData:
+    def __init__(self, name, start, end):
+        # type: (str, float, float) -> None
+        self.name = name
+        self.start = start
+        self.end = end
+
 
 class TrackPayload(BaseRequestPayload):
     _json_field_names = {
@@ -242,8 +255,8 @@ class TrackPayload(BaseRequestPayload):
         "track_data": "trackData",
     }
 
-    def __init__(self, track_id, track_details, map_details, map_image_data=None):
-        # type: (str, TrackConfigData | None, MapConfigData | None, str | None) -> None
+    def __init__(self, track_id, track_details, map_details, map_image_data=None, section_data=[]):
+        # type: (str, TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData]) -> None
         self.track_id = track_id
         self.track_data = TrackDataPayload(track_details, map_details, map_image_data)
 
@@ -257,10 +270,11 @@ class TrackDataPayload(BaseRequestPayload):
         "y_offset": "yOffset",
         "margin": "margin",
         "image": "image",
+        "sections": "sections"
     }
 
-    def __init__(self, track_details, map_details, map_image_data):
-        # type: (TrackConfigData | None, MapConfigData | None, str | None) -> None
+    def __init__(self, track_details, map_details, map_image_data, section_data = []):
+        # type: (TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData]) -> None
         if track_details:
             self.track_name = track_details.track_name
         if map_details:
@@ -270,6 +284,7 @@ class TrackDataPayload(BaseRequestPayload):
             self.y_offset = map_details.y_offset
             self.margin = map_details.margin
         self.image = map_image_data
+        self.sections = section_data
 
     def as_state(self):
         has_track_details = bool(self.track_name)
@@ -278,11 +293,14 @@ class TrackDataPayload(BaseRequestPayload):
         )
         map_margin_ok = bool(self.margin and math.floor(self.margin) == 10)
         has_map = bool(self.image)
+        has_sections = bool(self.sections)
+
         return TrackDataState(
             has_track_details=has_track_details,
             has_map_details=has_map_details,
             map_margin_ok=map_margin_ok,
             has_map=has_map,
+            has_sections=has_sections,
         )
 
 
