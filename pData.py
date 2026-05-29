@@ -20,7 +20,6 @@ import math
 
 from sim_info import info
 
-from src.DataUploader import stop_worker
 from src.plogging import pLogger
 from src.controllers import EventController, TrackDataController
 from src.models import EventData, Telemetry, UpdateData, LapData
@@ -105,7 +104,6 @@ def acShutdown():
         log("No Event Controller to close")
     else:
         event_controller.close()
-    stop_worker()
     for thread in threading.enumerate():
         if thread.name.startswith("pdata"):
             log("[ac] Waiting for thread {}".format(thread.name))
