@@ -48,7 +48,7 @@ def acMain(ac_version):  # pylint: disable=W0613
     global event_controller, track_data_controller
     # Static Controller inits
     track_data_controller = TrackDataController(
-        ac.getTrackName(0), ac.getTrackConfiguration(0)
+        ac.getTrackName(0), ac.getTrackConfiguration(0), round(ac.getTrackLength(0), 2),
     )
     return "pData"
 

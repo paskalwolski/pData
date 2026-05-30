@@ -226,9 +226,10 @@ class TrackDataState:
 class TrackConfigData:
     """Data grabbed from the Track config file"""
 
-    def __init__(self, track_name):
-        # type: (str | None) -> None
+    def __init__(self, track_name, track_length):
+        # type: (str | None, float) -> None
         self.track_name = track_name
+        self.track_length = track_length
 
 
 class MapConfigData:
@@ -241,7 +242,13 @@ class MapConfigData:
         self.margin = margin
         self.image_path = image_path
 
-class TrackSectionData:
+class TrackSectionData(BaseRequestPayload):
+    _json_field_names = {
+        "name": "name",
+        "start": "start",
+        "end": "end"
+    }
+
     def __init__(self, name, start, end):
         # type: (str, float, float) -> None
         self.name = name
@@ -255,13 +262,13 @@ class TrackPayload(BaseRequestPayload):
         "track_data": "trackData",
     }
 
-    def __init__(self, track_id, track_details, map_details, map_image_data=None, section_data=[]):
-        # type: (str, TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData]) -> None
+    def __init__(self, track_id, track_details, map_details, map_image_data=None, section_data = None):
+        # type: (str, TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData] | None) -> None
         self.track_id = track_id
-        self.track_data = TrackDataPayload(track_details, map_details, map_image_data)
+        self.track_data = TrackDataFieldPayload(track_details, map_details, map_image_data, section_data)
 
 
-class TrackDataPayload(BaseRequestPayload):
+class TrackDataFieldPayload(BaseRequestPayload):
     _json_field_names = {
         "track_name": "trackName",
         "width": "width",
@@ -270,11 +277,14 @@ class TrackDataPayload(BaseRequestPayload):
         "y_offset": "yOffset",
         "margin": "margin",
         "image": "image",
+        # TODO: Rely fully on these bundles
+        "map_data": "mapData",
+        "track_data": "trackData",
         "sections": "sections"
     }
 
-    def __init__(self, track_details, map_details, map_image_data, section_data = []):
-        # type: (TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData]) -> None
+    def __init__(self, track_details, map_details, map_image_data, section_data):
+        # type: (TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData] | None) -> None
         if track_details:
             self.track_name = track_details.track_name
         if map_details:
@@ -284,15 +294,18 @@ class TrackDataPayload(BaseRequestPayload):
             self.y_offset = map_details.y_offset
             self.margin = map_details.margin
         self.image = map_image_data
+
+        self.map_data = MapDataPayload(map_details, map_image_data)
+        self.track_data = TrackDataPayload(track_details)
         self.sections = section_data
 
     def as_state(self):
-        has_track_details = bool(self.track_name)
+        has_track_details = bool(self.track_data.track_name)
         has_map_details = bool(
-            self.width and self.height and self.x_offset and self.y_offset
+            self.map_data.width and self.map_data.height and self.map_data.x_offset and self.map_data.y_offset
         )
-        map_margin_ok = bool(self.margin and math.floor(self.margin) == 10)
-        has_map = bool(self.image)
+        map_margin_ok = bool(self.map_data.margin and math.floor(self.map_data.margin) == 10)
+        has_map = bool(self.map_data.image)
         has_sections = bool(self.sections)
 
         return TrackDataState(
@@ -302,6 +315,57 @@ class TrackDataPayload(BaseRequestPayload):
             has_map=has_map,
             has_sections=has_sections,
         )
+    
+    @classmethod
+    def from_json_dict(cls, json_dict, overrides=None):
+        instance = cls.__new__(cls)
+        base_fields = ['track_name', 'width', 'height', 'x_offset', 'y_offset', 'margin', ('image', 'url',)]
+        for field in base_fields:
+            if isinstance(field, str):
+                setattr(instance, field, json_dict.get(cls._json_field_names[field]))
+            if isinstance(field, tuple):
+                setattr(instance, field[0], json_dict.get(field[1]))
+
+        instance.track_data = TrackDataPayload.from_json_dict(json_dict.get(cls._json_field_names['track_data']))
+        instance.map_data = MapDataPayload.from_json_dict(json_dict.get(cls._json_field_names['map_data']))
+        section_data = json_dict.get(cls._json_field_names['sections'])
+        instance.sections = [TrackSectionData(**entry) for entry in section_data] if section_data else []
+        return instance
+    
+
+class MapDataPayload(BaseRequestPayload):
+    _json_field_names={
+        "width": "width",
+        "height": "height",
+        "x_offset": "xOffset",
+        "y_offset": "yOffset",
+        "margin": "margin",
+        "image": "image",
+    }
+
+    def __init__(self, map_details, map_image_data):
+        # type: (MapConfigData | None, str | None) -> None
+        if (map_details):
+            self.width = map_details.width
+            self.height = map_details.height
+            self.x_offset = map_details.x_offset
+            self.y_offset = map_details.y_offset
+            self.margin = map_details.margin
+        if map_image_data:
+            self.image = map_image_data
+
+
+class TrackDataPayload(BaseRequestPayload):
+    _json_field_names = {
+        "track_name": "trackName",
+        "track_length": "trackLength",
+    }
+
+    def __init__(self, track_details):
+        # type: (TrackConfigData | None) -> None
+        self.track_name = track_details.track_name if track_details else None
+        self.track_length = track_details.track_length if track_details else None
+
 
 
 class RequestTrackPayload(BaseRequestPayload):
@@ -318,6 +382,6 @@ class RequestTrackResponse:
     def __init__(self, json_data = {}):
         # type: (dict) -> None
         self.exists = bool(json_data.get("exists", None))
-        self.track_data = TrackDataPayload.from_json_dict(
-            json_data.get(self._json_field_names["track_data"]), {"image": "url"}
+        self.track_data = TrackDataFieldPayload.from_json_dict(
+            json_data.get(self._json_field_names["track_data"])
         )

@@ -1,6 +1,7 @@
 import base64
 import configparser
 import json
+import math
 import os
 import traceback
 
@@ -11,7 +12,7 @@ from src.models import (
     MapConfigData,
     RequestTrackPayload,
     TrackConfigData,
-    TrackDataPayload,
+    TrackDataFieldPayload,
     TrackPayload,
     TrackDataState,
     TrackSectionData,
@@ -23,11 +24,12 @@ log = pLogger(__name__).log
 
 
 class TrackDataController:
-    def __init__(self, track, variant):
-        # type: (str, str | None) -> None
+    def __init__(self, track, variant, track_length):
+        # type: (str, str | None, float) -> None
         self.display = TrackDataDisplay(self.fire_track_data_upload)
         self.track = track
         self.variant = variant
+        self.track_length = track_length
 
         self.root_track_dir = os.path.join(os.getcwd(), "content", "tracks", self.track)
 
@@ -72,7 +74,7 @@ class TrackDataController:
             with open(ui_ini_path, "r", encoding="utf-8") as ui_file:
                 data = ui_file.read()
                 track_details = json.loads(data)
-                self.track_details = TrackConfigData(track_name=track_details["name"])
+                self.track_details = TrackConfigData(track_name=track_details["name"], track_length=self.track_length)
         except (FileNotFoundError, json.JSONDecodeError):
             log("Unable to read Track Details", traceback.format_exc())
 
@@ -116,8 +118,8 @@ class TrackDataController:
                 section_data = cp[section]
                 section_details = TrackSectionData(
                     section_data['TEXT'],
-                    float(section_data['IN']),
-                    float(section_data['OUT']),
+                    int(math.ceil(float(section_data['IN']) * self.track_length)),
+                    int(math.ceil(float(section_data['OUT']) * self.track_length)),
                 )
                 sections.append(section_details)
             self.section_data = sections
@@ -170,7 +172,7 @@ class TrackDataController:
     @property
     def local_state(self):
         # type: () -> TrackDataState
-        return TrackDataPayload(
+        return TrackDataFieldPayload(
             self.track_details, self.map_details, self._prepare_map_image(), self.section_data
         ).as_state()
     
