@@ -18,15 +18,12 @@ from src.models import (
     TrackSectionData,
 )
 from src.plogging import pLogger
-from src.data_displays.TrackDataDisplay import TrackDataDisplay
-
 log = pLogger(__name__).log
 
 
 class TrackDataController:
-    def __init__(self, track, variant, track_length):
-        # type: (str, str | None, float) -> None
-        self.display = TrackDataDisplay(self.fire_track_data_upload)
+    def __init__(self, track, variant, track_length, display):
+        self.display = display
         self.track = track
         self.variant = variant
         self.track_length = track_length

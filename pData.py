@@ -21,7 +21,8 @@ import math
 from sim_info import info
 
 from src.plogging import pLogger
-from src.controllers import EventController, TrackDataController
+from src.controllers import DataController, EventController, TrackDataController
+from src.controllers.DataController import TrackIdData
 from src.models import EventData, Telemetry, UpdateData, LapData
 
 
@@ -38,18 +39,17 @@ log = pLogger(__name__).log
 track_length = None  # type: int | None
 last_meter = None  # type: int | None
 event_controller = None  # type: EventController | None
-track_data_controller = None  # type: TrackDataController | None
+data_controller = None  # type: DataController | None
 
 # Best (smallest) delta-from-midpoint seen for the current meter
 best_meter_delta = None  # type: int | None
 
 
 def acMain(ac_version):  # pylint: disable=W0613
-    global event_controller, track_data_controller
+    global event_controller, data_controller
     # Static Controller inits
-    track_data_controller = TrackDataController(
-        ac.getTrackName(0), ac.getTrackConfiguration(0), round(ac.getTrackLength(0), 2),
-    )
+    track_id_data = TrackIdData( ac.getTrackName(0), ac.getTrackConfiguration(0), round(ac.getTrackLength(0), 2),)
+    data_controller = DataController(track_id_data)
     return "pData"
 
 
@@ -155,12 +155,12 @@ def _get_update_payload(distance):
 
 
 def _get_event_data():
-    global track_data_controller
-    if not track_data_controller:
+    global data_controller
+    if not data_controller:
         raise ACException("Track Data Controller not initialised")
     return EventData(
         app_config["user.username"] or ac.getDriverName(0),
-        track_data_controller.track_id,
+        data_controller.track_id,
         ac.getCarName(0),
         int(math.ceil(ac.getTrackLength(0))),
     )

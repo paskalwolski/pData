@@ -1,27 +1,20 @@
 import ac  # type: ignore
 from src.models import TrackDataState
 from src.plogging import pLogger
+from src.data_displays.layout import MARGIN, LABEL_W, STATUS_W, ROW_H, HEADER_H, BUTTON_H, WINDOW_W, FULL_W
 
 RED = (1.0, 0.2, 0.2, 1.0)
 GREEN = (0.2, 1.0, 0.2, 1.0)
 
-_MARGIN = 10
-_LABEL_W = 180
-_STATUS_W = 60
-_ROW_H = 25
-_HEADER_H = 30
-_BUTTON_H = 30
-_WINDOW_W = _MARGIN + _LABEL_W + 2 * _STATUS_W + _MARGIN
-_WINDOW_H = (
-    _MARGIN
-    + _HEADER_H
-    + _MARGIN
-    + (len(TrackDataState.value_ids) * _ROW_H)
-    + _MARGIN
-    + _BUTTON_H
-    + _MARGIN
+SECTION_H = (
+    MARGIN
+    + HEADER_H
+    + MARGIN
+    + (len(TrackDataState.value_ids) * ROW_H)
+    + MARGIN
+    + BUTTON_H
+    + MARGIN
 )
-_FULL_W = _WINDOW_W - 2 * _MARGIN
 
 log = pLogger(__name__).log
 
@@ -37,8 +30,9 @@ class ACTION_STATE:
 
 class TrackDataDisplay:
 
-    def __init__(self, on_upload):
-        # type: (TrackDataDisplay, callable) -> None # type: ignore
+    def __init__(self, app, y_offset, on_upload):
+        self._app = app
+        self._y_offset = y_offset
         self._on_upload = on_upload
         self.rows = {}  # type: dict[str, tuple[object, object, object]]
         self.actions = {}
@@ -66,43 +60,37 @@ class TrackDataDisplay:
 
     def _setup_ui(self):
         # type: () -> None
-        self.app = ac.newApp("pData_TrackData")
-        ac.setSize(self.app, _WINDOW_W, _WINDOW_H)
-        ac.drawBackground(self.app, 0)
-        ac.setTitle(self.app, " ")
-        ac.drawBorder(self.app, 0)
-        ac.setIconPosition(self.app, -10000, -10000)
-        draw_y = _MARGIN
+        draw_y = self._y_offset + MARGIN
 
-        header_x = _MARGIN
+        header_x = MARGIN
         self._create_label(
             "Track Data",
             draw_y,
             x=header_x,
-            width=_LABEL_W,
-            height=_HEADER_H,
+            width=LABEL_W,
+            height=HEADER_H,
             font_size=18,
             font_alignment="left",
         )
-        header_x += _LABEL_W
+        header_x += LABEL_W
         self._create_label(
-            "Local", draw_y, x=header_x, width=_STATUS_W, height=_HEADER_H, font_size=12
+            "Local", draw_y, x=header_x, width=STATUS_W, height=HEADER_H, font_size=12
         )
-        header_x += _STATUS_W
+        header_x += STATUS_W
         self._create_label(
             "Remote",
             draw_y,
             x=header_x,
-            width=_STATUS_W,
-            height=_HEADER_H,
+            width=STATUS_W,
+            height=HEADER_H,
             font_size=12,
         )
-        draw_y += _HEADER_H + _MARGIN
+        draw_y += HEADER_H + MARGIN
 
         for row_id, label in TrackDataState.value_labels.items():
             self._add_row(draw_y, row_id, label)
-            draw_y += _ROW_H
-        draw_y += _MARGIN
+            draw_y += ROW_H
+        draw_y += MARGIN
         self._setup_action(draw_y)
 
     def _setup_action(self, y):
@@ -112,9 +100,9 @@ class TrackDataDisplay:
         complete = self._create_label("Upload Complete", y, color=GREEN)
         error = self._create_label("Error Uploading", y, color=RED)
         # Create Upload Button
-        ready = ac.addButton(self.app, "Upload")
-        ac.setPosition(ready, _MARGIN, y)
-        ac.setSize(ready, _FULL_W, _BUTTON_H)
+        ready = ac.addButton(self._app, "Upload")
+        ac.setPosition(ready, MARGIN, y)
+        ac.setSize(ready, FULL_W, BUTTON_H)
 
         # Create closure function here, so we can correctly assign it to the button
         def on_upload_clicked(*_):
@@ -139,15 +127,15 @@ class TrackDataDisplay:
         text,
         y,
         *,
-        x=_MARGIN,
-        width=_FULL_W,
-        height=_BUTTON_H,
+        x=MARGIN,
+        width=FULL_W,
+        height=BUTTON_H,
         color=None,
         font_size=14,
         font_alignment="center"
     ):
         # type: (str, int, list, int, int, int, tuple[float, float, float, float] | None, int, str)-> object
-        label = ac.addLabel(self.app, text)
+        label = ac.addLabel(self._app, text)
         ac.setSize(label, width, height)
         ac.setFontSize(label, font_size)
         ac.setFontAlignment(label, font_alignment)
@@ -162,24 +150,24 @@ class TrackDataDisplay:
         row_label = self._create_label(
             row_label_text,
             row_y,
-            x=_MARGIN,
-            width=_LABEL_W,
-            height=_ROW_H,
+            x=MARGIN,
+            width=LABEL_W,
+            height=ROW_H,
             font_size=14,
             font_alignment="left",
         )
 
         # Create Local State Label
-        local_col_x = _MARGIN + _LABEL_W
+        local_col_x = MARGIN + LABEL_W
         status_label_local = self._create_label(
-            "-", row_y, x=local_col_x, width=_STATUS_W, height=_ROW_H
+            "-", row_y, x=local_col_x, width=STATUS_W, height=ROW_H
         )
         self._set_label_value(status_label_local, row_local_value)
 
         # Create Remote State Label
-        row_col_x = local_col_x + _STATUS_W
+        row_col_x = local_col_x + STATUS_W
         status_label_remote = self._create_label(
-            "-", row_y, x=row_col_x, width=_STATUS_W, height=_ROW_H
+            "-", row_y, x=row_col_x, width=STATUS_W, height=ROW_H
         )
         self._set_label_value(status_label_remote, None)
 
