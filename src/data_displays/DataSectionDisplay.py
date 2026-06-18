@@ -17,12 +17,13 @@ class ACTION_STATE:
     ERROR = "ERROR"
 
 
-class TrackDataDisplay:
+class DataSectionDisplay:
 
-    def __init__(self, app, y_offset, on_upload):
+    def __init__(self, app, y_offset, on_upload, title):
         self._app = app
         self._y_offset = y_offset
         self._on_upload = on_upload
+        self._title = title
         self._required_rows = []
         self._optional_rows = []
         self.rows = {}
@@ -45,7 +46,7 @@ class TrackDataDisplay:
 
         header_x = MARGIN
         self._create_label(
-            "Track Data",
+            self._title,
             draw_y,
             x=header_x,
             width=LABEL_W,
@@ -96,8 +97,8 @@ class TrackDataDisplay:
         self._set_action_state(ACTION_STATE.ERROR)
 
     def _setup_action(self, y):
-        waiting = self._create_label("Waiting for Track Data...", y)
-        disabled = self._create_label("Track Upload not Available", y, color=RED)
+        waiting = self._create_label("Waiting for {}...".format(self._title), y)
+        disabled = self._create_label("{} Upload not Available".format(self._title), y, color=RED)
         uploading = self._create_label("Upload in Progress", y)
         complete = self._create_label("Upload Complete", y, color=GREEN)
         error = self._create_label("Error Uploading", y, color=RED)

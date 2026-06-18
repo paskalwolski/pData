@@ -1,3 +1,3 @@
 from .LapStatus import lap_status_display
-from .TrackDataDisplay import TrackDataDisplay
+from .DataSectionDisplay import DataSectionDisplay
 from .DataControllerDisplay import DataControllerDisplay

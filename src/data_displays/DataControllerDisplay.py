@@ -1,11 +1,14 @@
 import ac  # type: ignore
-from src.data_displays.TrackDataDisplay import TrackDataDisplay
+from src.data_displays.DataSectionDisplay import DataSectionDisplay
 from src.data_displays.layout import MARGIN, LABEL_W, HEADER_H, ROW_H, WINDOW_W, FULL_W
 from src.plogging import pLogger
 
 _CAR_H = MARGIN + HEADER_H + ROW_H + MARGIN
 
 log = pLogger(__name__).log
+
+
+_WAITING_H = MARGIN + ROW_H + MARGIN
 
 
 class DataControllerDisplay:
@@ -15,10 +18,24 @@ class DataControllerDisplay:
         ac.setTitle(self.app, " ")
         ac.drawBorder(self.app, 0)
         ac.setIconPosition(self.app, -10000, -10000)
+        ac.setSize(self.app, WINDOW_W, _WAITING_H)
 
-        self.track_display = TrackDataDisplay(self.app, 0, on_upload)
+        self._waiting_label = ac.addLabel(self.app, "Waiting for data registry...")
+        ac.setPosition(self._waiting_label, MARGIN, MARGIN)
+        ac.setSize(self._waiting_label, FULL_W, ROW_H)
+        ac.setFontSize(self._waiting_label, 14)
+        ac.setFontAlignment(self._waiting_label, "center")
+
+        self.track_display = DataSectionDisplay(self.app, 0, on_upload, "Track Data")
+
+    def register_required_row(self, key, label):
+        self.track_display.register_required_row(key, label)
+
+    def register_optional_row(self, key, label):
+        self.track_display.register_optional_row(key, label)
 
     def build(self):
+        ac.setVisible(self._waiting_label, 0)
         section_h = self.track_display.section_h
         ac.setSize(self.app, WINDOW_W, section_h + _CAR_H)
         self.track_display.build()
