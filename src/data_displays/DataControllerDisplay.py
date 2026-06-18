@@ -1,12 +1,9 @@
 import ac  # type: ignore
 from src.data_displays.DataSectionDisplay import DataSectionDisplay
-from src.data_displays.layout import MARGIN, LABEL_W, HEADER_H, ROW_H, WINDOW_W, FULL_W
+from src.data_displays.layout import MARGIN, ROW_H, WINDOW_W, FULL_W
 from src.plogging import pLogger
 
-_CAR_H = MARGIN + HEADER_H + ROW_H + MARGIN
-
 log = pLogger(__name__).log
-
 
 _WAITING_H = MARGIN + ROW_H + MARGIN
 
@@ -26,33 +23,28 @@ class DataControllerDisplay:
         ac.setFontSize(self._waiting_label, 14)
         ac.setFontAlignment(self._waiting_label, "center")
 
-        self.track_display = DataSectionDisplay(self.app, 0, on_upload, "Track Data")
+        self.track_display = DataSectionDisplay(self.app, on_upload, "Track Data")
+        self.car_display = DataSectionDisplay(self.app, lambda: None, "Car Data")
 
-    def register_required_row(self, key, label):
-        self.track_display.register_required_row(key, label)
+    def register_track_row(self, key, label, required=True):
+        if required:
+            self.track_display.register_required_row(key, label)
+        else:
+            self.track_display.register_optional_row(key, label)
 
-    def register_optional_row(self, key, label):
-        self.track_display.register_optional_row(key, label)
+    def register_car_row(self, key, label, required=True):
+        if required:
+            self.car_display.register_required_row(key, label)
+        else:
+            self.car_display.register_optional_row(key, label)
 
     def build(self):
         ac.setVisible(self._waiting_label, 0)
-        section_h = self.track_display.section_h
-        ac.setSize(self.app, WINDOW_W, section_h + _CAR_H)
-        self.track_display.build()
-        self._build_car_section(section_h)
-
-    def _build_car_section(self, y):
-        header = ac.addLabel(self.app, "Car Data")
-        ac.setPosition(header, MARGIN, y + MARGIN)
-        ac.setSize(header, LABEL_W, HEADER_H)
-        ac.setFontSize(header, 18)
-        ac.setFontAlignment(header, "left")
-
-        placeholder = ac.addLabel(self.app, "Waiting for Car Data Init...")
-        ac.setPosition(placeholder, MARGIN, y + MARGIN + HEADER_H)
-        ac.setSize(placeholder, FULL_W, ROW_H)
-        ac.setFontSize(placeholder, 14)
-        ac.setFontAlignment(placeholder, "center")
+        track_section_h = self.track_display.section_h
+        car_section_h = self.car_display.section_h
+        ac.setSize(self.app, WINDOW_W, track_section_h + car_section_h)
+        self.track_display.build(0)
+        self.car_display.build(track_section_h)
 
     def set_values(self, column, values):
         self.track_display.set_values(column, values)

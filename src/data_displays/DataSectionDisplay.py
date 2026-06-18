@@ -23,9 +23,9 @@ class ACTION_STATE:
 
 class DataSectionDisplay:
 
-    def __init__(self, app, y_offset, on_upload, title):
+    def __init__(self, app, on_upload, title):
         self._app = app
-        self._y_offset = y_offset
+        self._y_offset = 0
         self._on_upload = on_upload
         self._title = title
         self._required_rows = []
@@ -46,7 +46,8 @@ class DataSectionDisplay:
     def register_optional_row(self, key, label):
         self._optional_rows.append((key, label))
 
-    def build(self):
+    def build(self, y_offset=0):
+        self._y_offset = y_offset
         draw_y = self._y_offset + MARGIN
 
         header_x = MARGIN
@@ -131,6 +132,7 @@ class DataSectionDisplay:
             ACTION_STATE.COMPLETE: complete,
             ACTION_STATE.ERROR: error,
         }
+        self._set_action_state(ACTION_STATE.WAITING)
 
     def _create_label(
         self,

@@ -43,10 +43,7 @@ class TrackDataController:
         self.map_details = None  # type: MapConfigData | None
   
         for key, label, required in _ROW_DEFS:
-            if required:
-                self.display.register_required_row(key, label)
-            else:
-                self.display.register_optional_row(key, label)
+            self.display.register_track_row(key, label, required)
         self.display.build()
 
         self.fire_get_track_data()
