@@ -3,7 +3,11 @@ from src.plogging import pLogger
 from src.data_displays.layout import MARGIN, LABEL_W, STATUS_W, ROW_H, HEADER_H, BUTTON_H, WINDOW_W, FULL_W
 
 RED = (1.0, 0.2, 0.2, 1.0)
+ORANGE = (1.0, 0.6, 0.0, 1.0)
 GREEN = (0.2, 1.0, 0.2, 1.0)
+
+_SEPARATOR_H = 10
+_SEPARATOR_COLOR = (0.5, 0.5, 0.5, 1.0)
 
 log = pLogger(__name__).log
 
@@ -33,7 +37,8 @@ class DataSectionDisplay:
     @property
     def section_h(self):
         row_count = len(self._required_rows) + len(self._optional_rows)
-        return MARGIN + HEADER_H + MARGIN + (row_count * ROW_H) + MARGIN + BUTTON_H + MARGIN
+        sep_h = _SEPARATOR_H if (self._required_rows and self._optional_rows) else 0
+        return MARGIN + HEADER_H + MARGIN + (row_count * ROW_H) + sep_h + MARGIN + BUTTON_H + MARGIN
 
     def register_required_row(self, key, label):
         self._required_rows.append((key, label))
@@ -70,10 +75,15 @@ class DataSectionDisplay:
         draw_y += HEADER_H + MARGIN
 
         for key, label in self._required_rows:
-            self._add_row(draw_y, key, label)
+            self._add_row(draw_y, key, label, RED)
             draw_y += ROW_H
+
+        if self._required_rows and self._optional_rows:
+            self._add_separator(draw_y)
+            draw_y += _SEPARATOR_H
+
         for key, label in self._optional_rows:
-            self._add_row(draw_y, key, label)
+            self._add_row(draw_y, key, label, ORANGE)
             draw_y += ROW_H
         draw_y += MARGIN
         self._setup_action(draw_y)
@@ -143,7 +153,18 @@ class DataSectionDisplay:
             ac.setFontColor(label, *color)
         return label
 
-    def _add_row(self, row_y, row_id, row_label_text, row_local_value=None):
+    def _add_separator(self, y):
+        sep = self._create_label(
+            "-" * 150,
+            y,
+            width=FULL_W,
+            height=_SEPARATOR_H,
+            font_size=5,
+            color=_SEPARATOR_COLOR,
+        )
+        return sep
+
+    def _add_row(self, row_y, row_id, row_label_text, ko_color=RED):
         row_label = self._create_label(
             row_label_text,
             row_y,
@@ -158,32 +179,28 @@ class DataSectionDisplay:
         status_label_local = self._create_label(
             "-", row_y, x=local_col_x, width=STATUS_W, height=ROW_H
         )
-        self._set_label_value(status_label_local, row_local_value)
+        self._set_label_value(status_label_local, None, ko_color)
 
         row_col_x = local_col_x + STATUS_W
         status_label_remote = self._create_label(
             "-", row_y, x=row_col_x, width=STATUS_W, height=ROW_H
         )
-        self._set_label_value(status_label_remote, None)
+        self._set_label_value(status_label_remote, None, ko_color)
 
-        self.rows[row_id] = (
-            row_label,
-            status_label_local,
-            status_label_remote,
-        )
+        self.rows[row_id] = (row_label, status_label_local, status_label_remote, ko_color)
 
     def _set_row_state(self, row_id, column, row_value):
         row = self.rows.get(row_id, None)
         if row:
-            self._set_label_value(row[column], row_value)
+            self._set_label_value(row[column], row_value, row[3])
 
-    def _set_label_value(self, label, val):
+    def _set_label_value(self, label, val, ko_color=RED):
         if val is None:
             text, col = "-", (1.0, 1.0, 1.0, 1.0)
         elif val:
             text, col = "OK", GREEN
         else:
-            text, col = "KO", RED
+            text, col = "KO", ko_color
         ac.setText(label, text)
         ac.setFontColor(label, *col)
 

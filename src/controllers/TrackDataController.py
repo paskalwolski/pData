@@ -26,7 +26,7 @@ _ROW_DEFS = [
     (TrackDataState.map_details_id,   "Map Details",      True),
     (TrackDataState.map_present_id,   "Map Image",        True),
     (TrackDataState.map_margin_id,    "Margin (10px)",    True),
-    (TrackDataState.section_data_id,  "[Track Sections]", False),
+    (TrackDataState.section_data_id,  "Track Sections", False),
 ]
 
 
