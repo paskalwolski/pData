@@ -18,7 +18,16 @@ from src.models import (
     TrackSectionData,
 )
 from src.plogging import pLogger
+
 log = pLogger(__name__).log
+
+_ROW_DEFS = [
+    (TrackDataState.track_details_id, "Track Details",    True),
+    (TrackDataState.map_details_id,   "Map Details",      True),
+    (TrackDataState.map_present_id,   "Map Image",        True),
+    (TrackDataState.map_margin_id,    "Margin (10px)",    True),
+    (TrackDataState.section_data_id,  "[Track Sections]", False),
+]
 
 
 class TrackDataController:
@@ -32,6 +41,13 @@ class TrackDataController:
 
         self.track_details = None  # type: TrackConfigData | None
         self.map_details = None  # type: MapConfigData | None
+  
+        for key, label, required in _ROW_DEFS:
+            if required:
+                self.display.register_required_row(key, label)
+            else:
+                self.display.register_optional_row(key, label)
+        self.display.build()
 
         self.fire_get_track_data()
         try:
@@ -43,14 +59,15 @@ class TrackDataController:
         except Exception:  # pylint: disable=W0718
             log("Error initing Track Details", traceback.format_exc())
 
-        self.display.set_state(1, self.local_state)
+        self.display.set_values(1, dict(self.local_state.items()))
 
     @property
     def track_id(self):
         return "{}_{}".format(self.track, self.variant) if self.variant else self.track
 
     def fire_track_data_upload(self):
-        if not self.local_state.ready:
+        state_values = dict(self.local_state.items())
+        if not all(state_values.get(key) for key, _, required in _ROW_DEFS if required):
             log("Unable to upload Track data: Missing Data")
             return
         worker.enqueue(self._upload_track_data_process)
@@ -161,10 +178,10 @@ class TrackDataController:
                 if remote_data.exists
                 else TrackDataState.empty()
             )
-            self.display.set_state(2, remote_track_state)
+            self.display.set_values(2, dict(remote_track_state.items()))
         except APIException:
             log("Failed to get Track Data from Remote", traceback.format_exc())
-            self.display.set_state(2, TrackDataState.empty())
+            self.display.set_values(2, dict(TrackDataState.empty().items()))
 
     @property
     def local_state(self):

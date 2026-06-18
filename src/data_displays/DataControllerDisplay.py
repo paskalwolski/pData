@@ -1,10 +1,9 @@
 import ac  # type: ignore
-from src.data_displays.TrackDataDisplay import TrackDataDisplay, SECTION_H
+from src.data_displays.TrackDataDisplay import TrackDataDisplay
 from src.data_displays.layout import MARGIN, LABEL_W, HEADER_H, ROW_H, WINDOW_W, FULL_W
 from src.plogging import pLogger
 
 _CAR_H = MARGIN + HEADER_H + ROW_H + MARGIN
-_TOTAL_H = SECTION_H + _CAR_H
 
 log = pLogger(__name__).log
 
@@ -12,15 +11,18 @@ log = pLogger(__name__).log
 class DataControllerDisplay:
     def __init__(self, on_upload):
         self.app = ac.newApp("pData_DataController")
-        ac.setSize(self.app, WINDOW_W, _TOTAL_H)
         ac.drawBackground(self.app, 0)
         ac.setTitle(self.app, " ")
         ac.drawBorder(self.app, 0)
         ac.setIconPosition(self.app, -10000, -10000)
 
         self.track_display = TrackDataDisplay(self.app, 0, on_upload)
-        # TODO: Include this in dedicated CarDisplay module
-        self._build_car_section(SECTION_H)
+
+    def build(self):
+        section_h = self.track_display.section_h
+        ac.setSize(self.app, WINDOW_W, section_h + _CAR_H)
+        self.track_display.build()
+        self._build_car_section(section_h)
 
     def _build_car_section(self, y):
         header = ac.addLabel(self.app, "Car Data")
@@ -35,8 +37,8 @@ class DataControllerDisplay:
         ac.setFontSize(placeholder, 14)
         ac.setFontAlignment(placeholder, "center")
 
-    def set_state(self, column, state):
-        self.track_display.set_state(column, state)
+    def set_values(self, column, values):
+        self.track_display.set_values(column, values)
 
     def set_uploading(self):
         self.track_display.set_uploading()

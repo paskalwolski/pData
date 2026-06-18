@@ -38,7 +38,7 @@ class LapStatus:
 
         # Lap History Tracking
         self.lap_history_data = [None for _ in range(5)]  # type: list[str | None]
-        self._setup_ui()
+        self.build()
 
     def register_lap(self, lap_number):
         # type: (int) -> None
@@ -68,7 +68,7 @@ class LapStatus:
         self.is_invalid = is_invalid or self.is_invalid
         self._update_display()
 
-    def _setup_ui(self):
+    def build(self):
         """
         Create and configure the UI elements in a dedicated app window
         """

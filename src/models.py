@@ -177,15 +177,6 @@ class TrackDataState:
     section_data_id = "section_data"
 
     value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id, section_data_id]
-    required_value_ids = [track_details_id, map_details_id, map_present_id, map_margin_id]
-
-    value_labels = {
-        track_details_id: "Track Details",
-        map_details_id: "Map Details",
-        map_present_id: "Map Image",
-        map_margin_id: "Margin (10px)",
-        section_data_id: "[Track Sections]"
-    }
 
     def __init__(
         self,
@@ -204,13 +195,6 @@ class TrackDataState:
 
     def items(self):
         return {id: getattr(self, id, None) for id in TrackDataState.value_ids}.items()  # type: ignore
-
-    @property
-    def ready(self):
-        for value_id in self.required_value_ids:
-            if not getattr(self, value_id, None):
-                return False
-        return True
 
     @classmethod
     def empty(cls):
