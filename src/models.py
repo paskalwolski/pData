@@ -289,7 +289,7 @@ class TrackDataFieldPayload(BaseRequestPayload):
             self.map_data.width and self.map_data.height and self.map_data.x_offset and self.map_data.y_offset
         )
         map_margin_ok = bool(self.map_data.margin and math.floor(self.map_data.margin) == 10)
-        has_map = bool(self.map_data.image)
+        has_map = bool(getattr(self.map_data, 'image', None))
         has_sections = bool(self.sections)
 
         return TrackDataState(
@@ -303,7 +303,7 @@ class TrackDataFieldPayload(BaseRequestPayload):
     @classmethod
     def from_json_dict(cls, json_dict, overrides=None):
         instance = cls.__new__(cls)
-        base_fields = ['track_name', 'width', 'height', 'x_offset', 'y_offset', 'margin', ('image', 'url',)]
+        base_fields = ['track_name', 'width', 'height', 'x_offset', 'y_offset', 'margin', 'image']
         for field in base_fields:
             if isinstance(field, str):
                 setattr(instance, field, json_dict.get(cls._json_field_names[field]))
@@ -311,7 +311,7 @@ class TrackDataFieldPayload(BaseRequestPayload):
                 setattr(instance, field[0], json_dict.get(field[1]))
 
         instance.track_data = TrackDataPayload.from_json_dict(json_dict.get(cls._json_field_names['track_data']))
-        instance.map_data = MapDataPayload.from_json_dict(json_dict.get(cls._json_field_names['map_data']))
+        instance.map_data = MapDataPayload.from_json_dict(json_dict.get(cls._json_field_names['map_data']), overrides={"image": "url"})
         section_data = json_dict.get(cls._json_field_names['sections'])
         instance.sections = [TrackSectionData(**entry) for entry in section_data] if section_data else []
         return instance
