@@ -6,11 +6,24 @@ from src.models import LapPayload, RequestTrackPayload, RequestTrackResponse, Tr
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
+CREATE_SESSION_URL = "https://createsession-3gpdongoba-uc.a.run.app"
 SESSION_CLOSE_URL = "https://closesession-3gpdongoba-uc.a.run.app"
 TRACK_POST_URL = "https://handletrackdata-3gpdongoba-uc.a.run.app"
 TRACK_CHECK_URL = "https://checktrackdata-3gpdongoba-uc.a.run.app"
 
 HEADERS = {"Content-Type": "application/json"}
+
+def create_session(session_payload):
+    # type: (CreateSessionPayload) -> str
+    """Create session document on server, returns sessionId."""
+    res = _post(CREATE_SESSION_URL, session_payload.to_json())
+    if res.status_code != 200:
+        raise APIException("Failed to create session: {}".format(res.status_code))
+    try:
+        return res.json()["sessionId"]
+    except (ValueError, KeyError) as e:
+        raise APIException("Malformed session response") from e
+
 
 def post_lap(lap_data_request):
     # type: (LapPayload) -> tuple[str, str | None]
