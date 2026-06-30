@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from src.models import LapPayload, RequestTrackPayload, RequestTrackResponse, TrackPayload
+from src.models import LapPayload, RequestTrackPayload, RequestTrackResponse, TrackPayload, CreateSessionPayload
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
@@ -46,6 +46,14 @@ def post_lap(lap_data_request):
         except (ValueError, KeyError) as e:
             raise APIException("Malformed Lap Response") from e
     raise APIException("Unexpected Response: {}".format(res.status_code))
+
+
+def post_discarded_lap(payload):
+    # type: (LapPayload) -> None
+    """Submit minimal payload for invalid/pit lap (no telemetry). Same endpoint as post_lap."""
+    res = _post(LAP_POST_URL, payload.to_json())
+    if res.status_code not in (200, 202):
+        raise APIException("Unexpected response: {}".format(res.status_code))
 
 
 def init_lap_handler():

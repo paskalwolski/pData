@@ -48,9 +48,6 @@ class LapController:
         if not last_lap_time:
             log("Discarded lap {} - No Lap Time".format(self.lap_number))
             return
-        if self.discard:
-            log("Discarded lap {} - Discard Flagged")
-            return
         worker.enqueue(lambda: self._close_process(last_lap_time))
         log(
             "Fired Close Lap {} in session {}: {}".format(
@@ -69,24 +66,39 @@ class LapController:
 
     def _close_process(self, last_lap_time):
         # type: (float) -> None
-        telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
-        lap_data_request = LapPayload(
-            self.lap_number,
-            last_lap_time,
-            not self.is_invalid,
-            self.is_pit,
-            self.discard,
-            telemetry_object,
-            self.session_data,
-        )
-        try:
-            lap_id, session_id = api_client.post_lap(lap_data_request)
-        except APIException:
-            log("Failed Lap Upload", traceback.format_exc())
-            return
-        if not self.discard:
-            self.register_lap_with_session(lap_id, session_id)
-        log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
+        if self.discard:
+            payload = LapPayload(
+                self.lap_number,
+                last_lap_time,
+                not self.is_invalid,
+                self.is_pit,
+                True,
+                None,
+                self.session_data,
+            )
+            try:
+                api_client.post_discarded_lap(payload)
+            except APIException:
+                log("Failed Discarded Lap Upload", traceback.format_exc())
+            log("Submitted Discard Lap {}: {}".format(self.lap_number, last_lap_time))
+        else:
+            telemetry_object = self._prepare_telemetry_data()  # pylint: disable=W0612
+            lap_data_request = LapPayload(
+                self.lap_number,
+                last_lap_time,
+                not self.is_invalid,
+                self.is_pit,
+                self.discard,
+                telemetry_object,
+                self.session_data,
+            )
+            try:
+                lap_id, _ = api_client.post_lap(lap_data_request)
+            except APIException:
+                log("Failed Lap Upload", traceback.format_exc())
+                return
+            self.register_lap_with_session(lap_id)
+            log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
     def _check_lap_boundary(self, lap_data):
         # type: (LapData) -> None
