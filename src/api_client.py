@@ -2,7 +2,7 @@ import json
 
 import requests
 
-from src.models import LapPayload, RequestTrackPayload, RequestTrackResponse, TrackPayload, CreateSessionPayload
+from src.models import CloseSessionPayload, LapPayload, RequestTrackPayload, RequestTrackResponse, TrackPayload, CreateSessionPayload
 from src.exceptions import APIException
 
 LAP_POST_URL = "https://handlelap-3gpdongoba-uc.a.run.app"
@@ -67,12 +67,12 @@ def init_lap_handler():
 
 
 def close_session(session_payload):
-    # type: (dict) -> bool
+    # type: (CloseSessionPayload) -> bool
     """
     Notify the backend that this Session is closed.
     Can be used to trigger extra Session data calculation
     """
-    data = json.dumps(session_payload)
+    data = session_payload.to_json()
     res = _post(SESSION_CLOSE_URL, data)
     return res.ok
 
