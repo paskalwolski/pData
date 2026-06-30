@@ -3,7 +3,7 @@ from datetime import datetime
 
 from src.worker import worker
 from src.controllers.LapController import LapController
-from src.models import EventData, SessionData, UpdateData, CreateSessionPayload
+from src.models import CloseSessionPayload, EventData, SessionData, UpdateData, CreateSessionPayload
 from src.plogging import pLogger
 from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded, APIException
 from src.data_displays.LapStatus import lap_status_display
@@ -82,7 +82,7 @@ class SessionController:
         if not self.remote_session_id:
             logger.worker_log("No remote session to close")
             return
-        api_client.close_session({"sessionId": self.remote_session_id})
+        api_client.close_session(CloseSessionPayload(self.remote_session_id, len(self.laps)))
         logger.worker_log(
             "Closed Remote Session {}: {} laps".format(
                 self.remote_session_id, len(self.laps)

@@ -186,6 +186,16 @@ class CreateSessionPayload(BaseRequestPayload):
         self.session_time = session_data.session_timestamp
         self.session_type = session_data.session
 
+class CloseSessionPayload(BaseRequestPayload):
+    _json_field_names = {
+        "session_id": "sessionId",
+        "lap_count": "lapCount",
+    }
+
+    def __init__(self, session_id, lap_count) -> None:
+        # type: (str, int) -> None
+        self.session_id = session_id
+        self.lap_count = lap_count
 
 class TrackDataState:
     track_details_id = "track_details"
