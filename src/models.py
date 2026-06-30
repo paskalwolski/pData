@@ -169,6 +169,24 @@ class LapPayload(BaseRequestPayload):
         self.session_data = SessionPayload(session_data)
 
 
+class CreateSessionPayload(BaseRequestPayload):
+    _json_field_names = {
+        "driver": "driver",
+        "car": "car",
+        "track": "track",
+        "session_time": "sessionTime",
+        "session_type": "sessionType",
+    }
+
+    def __init__(self, session_data):
+        # type: (SessionData) -> None
+        self.driver = session_data.event_data.driver
+        self.car = session_data.event_data.car
+        self.track = session_data.event_data.track
+        self.session_time = session_data.session_timestamp
+        self.session_type = session_data.session
+
+
 class TrackDataState:
     track_details_id = "track_details"
     map_details_id = "map_details"

@@ -1,10 +1,11 @@
+import traceback
 from datetime import datetime
 
 from src.worker import worker
 from src.controllers.LapController import LapController
-from src.models import EventData, SessionData, UpdateData
+from src.models import EventData, SessionData, UpdateData, CreateSessionPayload
 from src.plogging import pLogger
-from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded
+from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded, APIException
 from src.data_displays.LapStatus import lap_status_display
 
 import src.api_client as api_client
@@ -55,24 +56,13 @@ class SessionController:
         # worker.enqueue(self._close_process)
         logger.log("Fired Close {} Session".format(self.session))
 
-    def register_lap(self, lap_id, session_id):
-        # type: (str, str | None) -> None
-        """Callback used when closing a lap
-        this allows the session to keep track of how many laps were live
+    def register_lap(self, lap_id):
+        # type: (str) -> None
+        """Callback used when closing a valid lap.
+        Tracks lap in session's lap list.
         """
-        if not session_id:
-            logger.log("No Session Update for lap {}".format(lap_id))
-            return
-        if self.remote_session_id and self.remote_session_id != session_id:
-            logger.log("Failed trying to update session {} with new id {}".format(self.remote_session_id, session_id))
-            return
-        
-        # Track this session, and ensure the id is propagated into the Lap as well
-        # TODO: Improve this - maybe fetch sessionData just-in-time for lap?
-        self.remote_session_id = session_id
         self.laps.append(lap_id)
-        if self.lap:
-            self.lap.register_session_id(session_id)
+        logger.log("Registered lap {} in session {}".format(lap_id, self.remote_session_id))
 
     @property
     def session_data(self):
@@ -100,5 +90,13 @@ class SessionController:
         )
 
     def _open_process(self):
-        api_client.init_lap_handler()
-        logger.worker_log("Succeeded opening lap handler")
+        try:
+            session_payload = CreateSessionPayload(self.session_data)
+            session_id = api_client.create_session(session_payload)
+            self.remote_session_id = session_id
+            if self.lap:
+                self.lap.register_session_id(session_id)
+            logger.worker_log("Session created: {}".format(session_id))
+            api_client.init_lap_handler()
+        except APIException:
+            logger.worker_log("Failed to create session", traceback.format_exc())
