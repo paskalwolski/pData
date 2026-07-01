@@ -183,7 +183,7 @@ class CreateSessionPayload(BaseRequestPayload):
         self.driver = session_data.event_data.driver
         self.car = session_data.event_data.car
         self.track = session_data.event_data.track
-        self.session_time = session_data.session_timestamp
+        self.session_time = session_data.session_timestamp.isoformat()
         self.session_type = session_data.session
 
 class CloseSessionPayload(BaseRequestPayload):
