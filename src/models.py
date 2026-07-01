@@ -295,7 +295,7 @@ class TrackDataFieldPayload(BaseRequestPayload):
         "sections": "sections"
     }
 
-    def __init__(self, track_details, map_details, map_image_data, section_data):
+    def __init__(self, track_details = None, map_details = None, map_image_data = None, section_data = None):
         # type: (TrackConfigData | None, MapConfigData | None, str | None, list[TrackSectionData] | None) -> None
         if track_details:
             self.track_name = track_details.track_name
@@ -396,4 +396,4 @@ class RequestTrackResponse:
         self.exists = bool(json_data.get("exists", None))
         self.track_data = TrackDataFieldPayload.from_json_dict(
             json_data.get(self._json_field_names["track_data"])
-        )
+        ) if json_data else TrackDataFieldPayload()
