@@ -12,11 +12,12 @@ class ConfigParser:
         for section in parser.sections():
             opts = parser[section]
             for opt, val in opts.items():
-                setattr(self, "{}.{}".format(section, opt), val)
+                setattr(self, "{}.{}".format(section, opt).lower(), val)
+                log("CONFIG | {}.{} {}".format(section, opt, val))
         log("Config loaded from {}".format(path))
 
     def __getitem__(self, key):
-        return getattr(self, key.upper() if isinstance(key, str) else key, None)
+        return getattr(self, key.lower() if isinstance(key, str) else key, None)
 
 
 app_config = ConfigParser()
