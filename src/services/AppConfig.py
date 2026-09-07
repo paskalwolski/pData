@@ -12,8 +12,11 @@ class ConfigParser:
         for section in parser.sections():
             opts = parser[section]
             for opt, val in opts.items():
-                setattr(self, "{}.{}".format(section, opt).lower(), val)
-                log("CONFIG | {}.{} {}".format(section, opt, val))
+                if val.startswith(";"):
+                    continue
+                input_val = val.split(";")[0]
+                setattr(self, "{}.{}".format(section, opt).lower(), input_val)
+                log("CONFIG | {}.{} {}".format(section, opt, input_val))
         log("Config loaded from {}".format(path))
 
     def __getitem__(self, key):
