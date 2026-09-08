@@ -53,7 +53,7 @@ class SessionController:
     def close(self):
         if self.lap:
             self.lap.close()
-        # worker.enqueue(self._close_process)
+        worker.enqueue(self._close_process)
         logger.log("Fired Close {} Session".format(self.session))
 
     def register_lap(self, lap_id):
