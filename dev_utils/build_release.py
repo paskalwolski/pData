@@ -4,7 +4,6 @@ import zipfile
 INCLUDE_FILES = [
     "pData.py",
     "readme.md",
-    "pData.ini",
     "pData_defaults.ini",
 ]
 
