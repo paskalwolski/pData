@@ -58,9 +58,13 @@ These are per-frame values that are stored once per metre by `LapController`.
 
 The most important design principle in this architecture: **the first tick of a new item carries the closing data for the previous item.**
 
-When a lap ends, `lap_number` increments. The first tick with `lap_number = N+1` also carries `last_lap_time` — the completed time for lap N, which AC persists from the moment the lap closes. The same principle applies at the session layer.
+At the session layer, the lap boundary is detected from `last_lap_time` itself rather than from `lap_number`. AC leaves `last_lap_time` at `None` until the first lap finishes, then persists the completed time for that lap until the next lap finishes. `SessionController` tracks the last value it has seen and compares it every tick:
 
-Each controller detects a boundary by comparing the relevant context field against its own tracked value. On mismatch it raises a `BoundaryExceeded` exception. The parent controller catches this, extracts the closing data from the same payload, closes the child, creates a new child, and retries the same tick on it.
+- **Neutral**: `None` → `None` (no lap has completed yet) — no boundary, nothing happens.
+- **Flip**: `None` → `T` (first lap completes) — the boundary fires, closing the first lap with time `T`.
+- **Flop**: `T` → `T'` (a later lap completes) — the boundary fires again, closing the just-finished lap with time `T'`.
+
+On any change, `SessionController` closes the current `LapController` with the new `last_lap_time`, creates a new `LapController` (using `lap_number` from the same tick), and forwards the tick to it. The same principle applies at the session layer for session boundaries.
 
 ```mermaid
 sequenceDiagram
@@ -68,12 +72,10 @@ sequenceDiagram
     participant LC_old as LapController (lap N)
     participant LC_new as LapController (lap N+1)
 
-    Note over SC,LC_new: Tick arrives: lap_number=N+1, last_lap_time=T
+    Note over SC,LC_new: Tick arrives: lap_number=N+1, last_lap_time=T (changed from previous tick)
 
-    SC->>LC_old: handle_tick(payload)
-    LC_old-->>SC: raise LapBoundaryExceeded
-
-    SC->>LC_old: close(lap_time=payload['last_lap_time'])
+    SC->>SC: last_lap_time changed -> boundary
+    SC->>LC_old: close(lap_time=T)
     Note over LC_old: Evaluates and conditionally uploads lap N
     LC_old-->>SC: on_lap_uploaded() [if uploaded]
 
@@ -105,8 +107,8 @@ The same sequence applies one layer up, with `EventController` as parent and `Se
 
 - Constructed with a snapshot of event-level data: `driver`, `car`, `track`, `session_type`, session timestamp
 - Holds a reference to the current `LapController`; passes the session data snapshot to it at construction so each lap upload is self-contained
-- Detects lap boundaries (`lap_number` mismatch) by catching `LapBoundaryExceeded`
-- On boundary: closes old `LapController` with `last_lap_time` from the payload, creates a new `LapController`, retries the tick
+- Detects lap boundaries by tracking `last_lap_time` and comparing it against the value seen on the previous tick
+- On any change (the `None` → value "flip", or a later value → value "flop"): closes the old `LapController` with the new `last_lap_time`, creates a new `LapController`, retries the tick
 - Tracks a count of successfully uploaded laps, incremented via the `on_lap_uploaded()` callback from `LapController`
 - On `close()`: if uploaded lap count > 0, triggers session upload (networking is a black box); otherwise discards
 
@@ -115,7 +117,7 @@ The same sequence applies one layer up, with `EventController` as parent and `Se
 - Constructed with: session data snapshot (for standalone upload), lap number, and an `on_lap_uploaded` callback
 - Accumulates per-metre telemetry data, indexed by `track_meter` (one sample per metre)
 - Tracks `is_invalid` (latched true when `tyres_out > 2` on any tick) and `is_pit` (latched true when `is_pit` on any tick)
-- Detects lap boundary (`lap_number` mismatch) — raises `LapBoundaryExceeded`
+- Detects a session reset (`lap_number` resets to `1` unexpectedly) — raises `SessionBoundaryExceeded`; the lap boundary itself is detected one layer up, by `SessionController`, from `last_lap_time`
 - On `close(lap_time)`:
   - If `lap_time` is None: discard (no completed time available)
   - Apply lap filtering rules (see below)

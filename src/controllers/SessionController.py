@@ -5,7 +5,7 @@ from src.worker import worker
 from src.controllers.LapController import LapController
 from src.models import CloseSessionPayload, EventData, SessionData, UpdateData, CreateSessionPayload
 from src.plogging import pLogger
-from src.exceptions import LapBoundaryExceeded, SessionBoundaryExceeded, APIException
+from src.exceptions import SessionBoundaryExceeded, APIException
 from src.data_displays.LapStatus import lap_status_display
 
 import src.api_client as api_client
@@ -22,6 +22,7 @@ class SessionController:
         self.remote_session_id = None
         self.laps = []  # type: list[str]
         self.lap = None  # type: LapController | None
+        self.last_lap_time = None  # type: float | None
         worker.enqueue(self._open_process)
         lap_status_display.register_session()
         logger.log("Session Ready")
@@ -32,23 +33,26 @@ class SessionController:
             self.lap = LapController(
                 self.session_data, payload.lap_data.lap_number, self.register_lap
             )
+            # Neutral baseline: take whatever last_lap_time the first tick reports,
+            # rather than assuming None - AC can already report a stale/non-None
+            # value on the first tick (e.g. pit box positioned behind the S/F line).
+            self.last_lap_time = payload.lap_data.last_lap_time
 
         # Check session boundary
         if payload.session != self.session:
             raise SessionBoundaryExceeded()
 
-        try:
-            self.lap.update(payload)
-        except LapBoundaryExceeded:
-            last_lap_time = payload.lap_data.last_lap_time
-            self.lap.close(last_lap_time)
+        # A change in last_lap_time is the edge of a lap: the neutral None->None
+        # tick does nothing, the None->value "flip" closes the first lap, and every
+        # later value->value "flop" closes the lap that just finished.
+        if payload.lap_data.last_lap_time != self.last_lap_time:
+            logger.log("Lap flip at meter {}".format(payload.lap_data.telemetry.d))
+            self.last_lap_time = payload.lap_data.last_lap_time
+            self.lap.close(self.last_lap_time)
             lap_number = payload.lap_data.lap_number
             self.lap = LapController(self.session_data, lap_number, self.register_lap)
-            try:
-                self.lap.update(payload)
-            except LapBoundaryExceeded:
-                logger.log("Payload for lap {} unsuccessful".format(payload.lap_data.lap_number))
-                return
+
+        self.lap.update(payload)
 
     def close(self):
         if self.lap:

@@ -7,7 +7,6 @@ from src.data_displays import lap_status_display
 from src.exceptions import (
     APIException,
     InvalidBundle,
-    LapBoundaryExceeded,
     SessionBoundaryExceeded,
 )
 
@@ -105,16 +104,10 @@ class LapController:
         lap = lap_data.lap_number
         if not lap:
             raise InvalidBundle()
-        if lap != self.lap_number:
-            if lap == 1:
-                # Reset lap count implies a new session
-                # TODO: Handle the case where current_lap == new_lap == 1 (restart on lap 1)
-                raise SessionBoundaryExceeded("Lap Count Reset")
-
-            # Next lap started
-            raise LapBoundaryExceeded(
-                "Lap Number {} does not match expected {}".format(lap, self.lap_number),
-            )
+        if lap == 1 and lap != self.lap_number:
+            # Reset lap count implies a new session
+            # TODO: Handle the case where current_lap == new_lap == 1 (restart on lap 1)
+            raise SessionBoundaryExceeded("Lap Count Reset")
 
     def _check_for_discard(self, lap_data):
         # type: (LapData) -> None
