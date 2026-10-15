@@ -82,11 +82,16 @@ class TrackDataController:
         )
         ui_ini_path = os.path.join(track_ui_path, "ui_track.json")
         try:
-            with open(ui_ini_path, "r", encoding="utf-8") as ui_file:
-                data = ui_file.read()
-                track_details = json.loads(data)
-                self.track_details = TrackConfigData(track_name=track_details["name"], track_length=self.track_length)
-        except (FileNotFoundError, json.JSONDecodeError):
+            with open(ui_ini_path, "rb") as ui_file:
+                raw = ui_file.read()
+            try:
+                data = raw.decode("utf-8-sig")
+            except UnicodeDecodeError:
+                # Some track mods ship ui_track.json in cp1252 (e.g. degree symbols)
+                data = raw.decode("cp1252", "replace")
+            track_details = json.loads(data)
+            self.track_details = TrackConfigData(track_name=track_details["name"], track_length=self.track_length)
+        except (IOError, ValueError, KeyError):  # JSONDecodeError doesn't exist in AC's Python 3.3
             log("Unable to read Track Details", traceback.format_exc())
 
     def _load_map_details(self):
