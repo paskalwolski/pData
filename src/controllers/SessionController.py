@@ -60,13 +60,14 @@ class SessionController:
         worker.enqueue(self._close_process)
         logger.log("Fired Close {} Session".format(self.session))
 
-    def register_lap(self, lap_id):
-        # type: (str) -> None
+    def register_lap(self, lap):
+        # type: (LapController) -> None
         """Callback used when closing a valid lap.
         Tracks lap in session's lap list.
         """
-        self.laps.append(lap_id)
-        logger.log("Registered lap {} in session {}".format(lap_id, self.remote_session_id))
+        if lap.lap_id:
+            self.laps.append(lap.lap_id)
+            logger.log("Registered lap {} in session {}".format(lap.lap_id, self.remote_session_id))
 
     @property
     def session_data(self):

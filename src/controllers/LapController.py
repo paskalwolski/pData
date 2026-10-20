@@ -24,11 +24,15 @@ class LapController:
         self.lap_telemetry = [
             None for _ in range(session_data.event_data.track_length)
         ]  # type: list[None | Telemetry]
-        self.register_lap_with_session = register_lap_callback
+
+
         self.last_stored_meter = 0
 
         self.is_pit = False
         self.is_invalid = False
+
+        self.register_lap_with_session = register_lap_callback
+        self.lap_id = None
         lap_status_display.register_lap(lap_number)
 
         log("Lap {} Ready".format(lap_number))
@@ -93,10 +97,11 @@ class LapController:
             )
             try:
                 lap_id, _ = api_client.post_lap(lap_data_request)
+                self.lap_id = lap_id
             except APIException:
                 log("Failed Lap Upload", traceback.format_exc())
                 return
-            self.register_lap_with_session(lap_id)
+            self.register_lap_with_session(self)
             log("Processed Lap {}: {}".format(self.lap_number, last_lap_time))
 
     def _check_lap_boundary(self, lap_data):
