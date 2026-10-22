@@ -89,7 +89,8 @@ class TrackDataController:
             except UnicodeDecodeError:
                 # Some track mods ship ui_track.json in cp1252 (e.g. degree symbols)
                 data = raw.decode("cp1252", "replace")
-            track_details = json.loads(data)
+            # strict=False: many track mods have raw tabs/newlines inside string values
+            track_details = json.loads(data, strict=False)
             self.track_details = TrackConfigData(track_name=track_details["name"], track_length=self.track_length)
         except (IOError, ValueError, KeyError):  # JSONDecodeError doesn't exist in AC's Python 3.3
             log("Unable to read Track Details", traceback.format_exc())
