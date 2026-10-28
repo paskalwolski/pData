@@ -3,3 +3,4 @@ from .EventController import EventController
 from .SessionController import SessionController
 from .TrackDataController import TrackDataController
 from .DataController import DataController
+from .RivalController import RivalController

@@ -21,7 +21,12 @@ import math
 from sim_info import info
 
 from src.plogging import pLogger
-from src.controllers import DataController, EventController, TrackDataController
+from src.controllers import (
+    DataController,
+    EventController,
+    TrackDataController,
+    RivalController,
+)
 from src.controllers.DataController import TrackIdData
 from src.models import EventData, Telemetry, UpdateData, LapData
 
@@ -40,24 +45,25 @@ track_length = None  # type: int | None
 last_meter = None  # type: int | None
 event_controller = None  # type: EventController | None
 data_controller = None  # type: DataController | None
+rival_controller = None # type: RivalController | None
 
 # Best (smallest) delta-from-midpoint seen for the current meter
 best_meter_delta = None  # type: int | None
 
 
 def acMain(ac_version):  # pylint: disable=W0613
-    global event_controller, data_controller
+    global event_controller, data_controller, rival_controller
     # Static Controller inits
     track_id_data = TrackIdData( ac.getTrackName(0), ac.getTrackConfiguration(0), round(ac.getTrackLength(0), 2),)
     data_controller = DataController(track_id_data)
+    rival_controller = RivalController()
     return "pData"
 
 
 def acUpdate(deltaT):  # pylint: disable=W0613
-    global event_controller
+    global event_controller, rival_controller
     global last_meter, best_meter_delta
     try:
-
         # Skip update if app wasn't initialized (e.g., in replay mode)
         if not info.graphics.status == 2:
             return
@@ -94,6 +100,8 @@ def acUpdate(deltaT):  # pylint: disable=W0613
         update_payload = _get_update_payload(spline_meter)
         # Trigger the Controller Updates
         event_controller.update(update_payload)
+
+        rival_controller.trigger_update()
     except Exception:  # pylint: disable=W0718
         log("ERROR", traceback.format_exc())
 
