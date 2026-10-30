@@ -126,6 +126,10 @@ def _get_update_payload(distance):
     raw_pos = ac.getCarState(0, acsys.CS.WorldPosition)
     pos = [round(raw_pos[0], 1), round(raw_pos[1], 1), round(raw_pos[2], 1)]
     ers = round(info.physics.kersCurrentKJ, 2)
+    # NdSlip order: FL, FR, RL, RR. ~1.0 = at tyre's peak grip
+    nd_slip = ac.getCarState(0, acsys.CS.NdSlip)
+    front_slip = round((nd_slip[0] + nd_slip[1]) / 2, 2)
+    rear_slip = round((nd_slip[2] + nd_slip[3]) / 2, 2)
 
     invalid = True if info.physics.numberOfTyresOut > 3 else False
     pit = ac.isCarInPitlane(0)
@@ -142,6 +146,8 @@ def _get_update_payload(distance):
         pos_x=pos[0],
         pos_z=pos[2],
         ers=ers,
+        front_slip=front_slip,
+        rear_slip=rear_slip,
     )
     lap_data_payload = LapData(
         lap_number=lap_number,

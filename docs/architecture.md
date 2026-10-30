@@ -51,6 +51,7 @@ These are per-frame values that are stored once per metre by `LapController`.
 | `rpm` | `acsys.CS.RPM` |
 | `pos_x`, `pos_y`, `pos_z` | `acsys.CS.WorldPosition` |
 | `ers` | `info.physics.kersCurrentKJ` |
+| `front_slip`, `rear_slip` | `acsys.CS.NdSlip` (front/rear axle average) |
 
 ---
 

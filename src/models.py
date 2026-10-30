@@ -52,12 +52,28 @@ class Telemetry:
         "pos_x": "posX",
         "pos_z": "posZ",
         "ers": "ers",
+        "front_slip": "frontSlip",
+        "rear_slip": "rearSlip",
     }
 
     def __init__(
-        self, *, d, lap_time, speed, gas, brake, gear, steer, rpm, pos_x, pos_z, ers
+        self,
+        *,
+        d,
+        lap_time,
+        speed,
+        gas,
+        brake,
+        gear,
+        steer,
+        rpm,
+        pos_x,
+        pos_z,
+        ers,
+        front_slip,
+        rear_slip
     ):
-        # type: (Telemetry, int, float, float, float, float, int, float, float, float, float, float) -> None
+        # type: (Telemetry, int, float, float, float, float, int, float, float, float, float, float, float, float) -> None
         self.d = d
         self.lap_time = lap_time
         self.speed = speed
@@ -69,6 +85,8 @@ class Telemetry:
         self.pos_x = pos_x
         self.pos_z = pos_z
         self.ers = ers
+        self.front_slip = front_slip
+        self.rear_slip = rear_slip
 
     @staticmethod
     def serialise_telemetry_object(telemetry):
